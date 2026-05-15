@@ -8,4 +8,4 @@ if [ ! -f ".env" ]; then
     echo "Please edit .env to set your DEEPSEEK_API_KEY"
 fi
 docker-compose up -d
-echo "PaperLens running at http://localhost:3000"
+echo "LearningTool running at http://localhost:3000"
