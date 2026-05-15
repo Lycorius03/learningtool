@@ -1,0 +1,224 @@
+<div class="page-content-inner" style="max-width:var(--content-max-width); margin:0 auto;">
+
+  <!-- ==================== API KEY MANAGEMENT ==================== -->
+  <section style="margin-bottom:var(--space-10);">
+    <h2 style="font-size:var(--text-xl); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-2);">API 密钥管理</h2>
+    <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin-bottom:var(--space-5);">
+      配置各 AI 服务商的 API 密钥，密钥仅保存在本地浏览器中。
+    </p>
+
+    <div style="display:flex; flex-direction:column; gap:var(--space-4);">
+
+      <!-- DeepSeek API -->
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3);">
+          <div>
+            <h3 class="card-header" style="margin-bottom:2px;">DeepSeek</h3>
+            <p style="font-size:var(--text-xs); color:var(--color-text-tertiary);">api.deepseek.com</p>
+          </div>
+          <span class="badge badge-success" id="dsStatus" style="display:none;">已配置</span>
+          <span class="badge badge-default" id="dsStatusEmpty">未配置</span>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <div style="display:flex; gap:var(--space-2);">
+            <input class="form-input" type="password" id="apiKeyDeepSeek" placeholder="sk-..." style="flex:1;" />
+            <button class="btn btn-secondary btn-sm" id="apiKeyDeepSeekToggle" tabindex="-1" style="flex-shrink:0;" title="显示/隐藏">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:var(--space-3);">
+          <button class="btn btn-accent btn-sm" id="apiKeyDeepSeekSave">保存</button>
+        </div>
+      </div>
+
+      <!-- OpenAI API -->
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3);">
+          <div>
+            <h3 class="card-header" style="margin-bottom:2px;">OpenAI</h3>
+            <p style="font-size:var(--text-xs); color:var(--color-text-tertiary);">api.openai.com</p>
+          </div>
+          <span class="badge badge-success" id="oaStatus" style="display:none;">已配置</span>
+          <span class="badge badge-default" id="oaStatusEmpty">未配置</span>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <div style="display:flex; gap:var(--space-2);">
+            <input class="form-input" type="password" id="apiKeyOpenAI" placeholder="sk-..." style="flex:1;" />
+            <button class="btn btn-secondary btn-sm" id="apiKeyOpenAIToggle" tabindex="-1" style="flex-shrink:0;" title="显示/隐藏">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:var(--space-3);">
+          <button class="btn btn-accent btn-sm" id="apiKeyOpenAISave">保存</button>
+        </div>
+      </div>
+
+      <!-- Anthropic API -->
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3);">
+          <div>
+            <h3 class="card-header" style="margin-bottom:2px;">Anthropic</h3>
+            <p style="font-size:var(--text-xs); color:var(--color-text-tertiary);">api.anthropic.com</p>
+          </div>
+          <span class="badge badge-success" id="anStatus" style="display:none;">已配置</span>
+          <span class="badge badge-default" id="anStatusEmpty">未配置</span>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <div style="display:flex; gap:var(--space-2);">
+            <input class="form-input" type="password" id="apiKeyAnthropic" placeholder="sk-ant-..." style="flex:1;" />
+            <button class="btn btn-secondary btn-sm" id="apiKeyAnthropicToggle" tabindex="-1" style="flex-shrink:0;" title="显示/隐藏">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:var(--space-3);">
+          <button class="btn btn-accent btn-sm" id="apiKeyAnthropicSave">保存</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ==================== QUIZ ALGORITHM PARAMETERS ==================== -->
+  <section style="margin-bottom:var(--space-10);">
+    <h2 style="font-size:var(--text-xl); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-2);">刷题算法参数</h2>
+    <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin-bottom:var(--space-5);">
+      调整 MFAW 加权乱序算法的参数。修改后对下一轮刷题生效。
+    </p>
+
+    <div class="card" style="display:flex; flex-direction:column; gap:var(--space-4);">
+
+      <!-- Alpha -->
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">错误权重 (&alpha;)</span>
+          <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px;">错题权重系数，值越大错题出现概率越高</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:var(--space-2);">
+          <input class="form-input" type="number" id="paramAlpha" value="2.0" step="0.1" min="0.1" max="10" style="width:80px; text-align:center;" />
+        </div>
+      </div>
+
+      <!-- Beta -->
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">时间衰减 (&beta;)</span>
+          <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px;">时间衰减系数，控制旧错题权重下降速度</p>
+        </div>
+        <div>
+          <input class="form-input" type="number" id="paramBeta" value="0.5" step="0.1" min="0" max="5" style="width:80px; text-align:center;" />
+        </div>
+      </div>
+
+      <!-- Gamma -->
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">连续正确奖励 (&gamma;)</span>
+          <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px;">连续正确奖励系数，降低已掌握题目的出现概率</p>
+        </div>
+        <div>
+          <input class="form-input" type="number" id="paramGamma" value="0.3" step="0.1" min="0" max="5" style="width:80px; text-align:center;" />
+        </div>
+      </div>
+
+      <!-- Delta -->
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">随机扰动 (&delta;)</span>
+          <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px;">随机噪声幅度，增加出题多样性，避免死循环</p>
+        </div>
+        <div>
+          <input class="form-input" type="number" id="paramDelta" value="0.15" step="0.05" min="0" max="1" style="width:80px; text-align:center;" />
+        </div>
+      </div>
+
+      <!-- EMA rate -->
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">EMA 平滑率</span>
+          <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px;">指数移动平均速率，平滑历史权重变化</p>
+        </div>
+        <div>
+          <input class="form-input" type="number" id="paramEmaRate" value="0.2" step="0.05" min="0.01" max="1" style="width:80px; text-align:center;" />
+        </div>
+      </div>
+
+      <!-- Lambda -->
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">难度调整 (&lambda;)</span>
+          <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px;">难度敏感度，控制算法对题目难度的响应强度</p>
+        </div>
+        <div>
+          <input class="form-input" type="number" id="paramLambda" value="1.0" step="0.1" min="0.1" max="5" style="width:80px; text-align:center;" />
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:var(--space-3); border-top:1px solid var(--color-border-subtle);">
+        <button class="btn btn-ghost btn-sm" id="paramResetDefault">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8a6 6 0 0111.3-3.3M14 8a6 6 0 01-11.3 3.3" stroke-linecap="round"/><path d="M1 3v3h3M15 13v-3h-3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          恢复默认
+        </button>
+        <button class="btn btn-accent btn-sm" id="paramSave">保存参数</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ==================== THEME TOGGLE ==================== -->
+  <section style="margin-bottom:var(--space-10);">
+    <h2 style="font-size:var(--text-xl); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-5);">外观</h2>
+    <div class="card" style="display:flex; align-items:center; justify-content:space-between;">
+      <div>
+        <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">主题模式</span>
+        <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px;">切换浅色/深色主题（开发中）</p>
+      </div>
+      <div style="display:flex; gap:var(--space-1); background:var(--color-bg-elevated); border-radius:var(--radius-md); padding:3px;">
+        <button class="btn btn-ghost btn-sm" id="themeLight" style="border-radius:var(--radius-sm); min-width:60px;">浅色</button>
+        <button class="btn btn-ghost btn-sm" id="themeDark" style="border-radius:var(--radius-sm); min-width:60px; opacity:0.5;">深色</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ==================== ABOUT ==================== -->
+  <section style="margin-bottom:var(--space-6);">
+    <h2 style="font-size:var(--text-xl); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-5);">关于</h2>
+    <div class="card">
+      <div style="display:flex; flex-direction:column; gap:var(--space-3);">
+        <div style="display:flex; justify-content:space-between;">
+          <span style="font-size:var(--text-sm); color:var(--color-text-secondary);">应用名称</span>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">PaperLens</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="font-size:var(--text-sm); color:var(--color-text-secondary);">版本</span>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">1.0.0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="font-size:var(--text-sm); color:var(--color-text-secondary);">刷题算法</span>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">MFAW (Multi-Factor Adaptive Weighting)</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="font-size:var(--text-sm); color:var(--color-text-secondary);">支持模型</span>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">DeepSeek / GPT-4o / Claude</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="font-size:var(--text-sm); color:var(--color-text-secondary);">数据存储</span>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">浏览器本地存储 (localStorage)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <p style="text-align:center; font-size:var(--text-xs); color:var(--color-text-tertiary); padding:var(--space-4) 0;">
+    PaperLens &mdash; 智能论文阅读，科学刷题
+  </p>
+
+</div>

@@ -1,0 +1,139 @@
+<div class="page-content-inner">
+
+  <!-- ==================== MODE SELECTION ==================== -->
+  <section class="stagger-children" style="margin-bottom:var(--space-8);">
+    <h2 style="font-size:var(--text-lg); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-4);">选择刷题模式</h2>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-4);">
+
+      <!-- Mode: Sequential -->
+      <div class="card hover-lift" id="quizModeSequential" style="cursor:pointer;" data-mode="sequential">
+        <div class="card-body" style="text-align:center; padding:var(--space-3) 0;">
+          <div style="width:40px; height:40px; margin:0 auto var(--space-3); background:var(--color-info-bg); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="var(--color-info)" stroke-width="1.5"><path d="M3 4h10M3 8h10M3 12h10" stroke-linecap="round"/></svg>
+          </div>
+          <h3 class="card-header" style="margin-bottom:var(--space-1);">顺序刷题</h3>
+          <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); line-height:var(--leading-snug);">按题库顺序逐题作答，适合初次学习</p>
+        </div>
+      </div>
+
+      <!-- Mode: Weighted Shuffle -->
+      <div class="card hover-lift" id="quizModeWeighted" style="cursor:pointer; border-color:var(--color-accent);" data-mode="weighted">
+        <div class="card-body" style="text-align:center; padding:var(--space-3) 0;">
+          <div style="width:40px; height:40px; margin:0 auto var(--space-3); background:var(--color-accent-soft); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="var(--color-accent)" stroke-width="1.5"><circle cx="5" cy="8" r="1.5"/><circle cx="9" cy="5" r="1.5"/><circle cx="11" cy="10" r="1.5"/><circle cx="3" cy="11" r="1.5"/><path d="M5 8l4-3M9 5l2 5" stroke-linecap="round"/></svg>
+          </div>
+          <h3 class="card-header" style="margin-bottom:var(--space-1);">加权乱序</h3>
+          <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); line-height:var(--leading-snug);">MFAW 算法智能排序，重点突破薄弱项</p>
+        </div>
+      </div>
+
+      <!-- Mode: Wrong Book -->
+      <div class="card hover-lift" id="quizModeWrongbook" style="cursor:pointer;" data-mode="wrongbook">
+        <div class="card-body" style="text-align:center; padding:var(--space-3) 0;">
+          <div style="width:40px; height:40px; margin:0 auto var(--space-3); background:var(--color-error-bg); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="var(--color-error)" stroke-width="1.5"><path d="M3 14l1-4 10-10 3 3-10 10-4 1z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3 class="card-header" style="margin-bottom:var(--space-1);">错题本</h3>
+          <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); line-height:var(--leading-snug);">复习所有答错题目，查漏补缺</p>
+        </div>
+      </div>
+
+    </div>
+    <p id="quizModeHint" style="margin-top:var(--space-2); font-size:var(--text-xs); color:var(--color-text-tertiary);">当前模式: <strong style="color:var(--color-accent);">加权乱序</strong></p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ==================== FILE IMPORT ==================== -->
+  <section style="margin-bottom:var(--space-8);">
+    <h2 style="font-size:var(--text-lg); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-4);">导入题库</h2>
+    <div class="drop-zone" id="quizDropZone" style="padding:var(--space-8);">
+      <svg class="drop-zone-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M14 10v2.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 12.5V10"/>
+        <path d="M8 2v8M4.5 5.5L8 2l3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <p class="drop-zone-title">导入题库文件</p>
+      <p class="drop-zone-desc">支持 JSON、Word、MD、PDF 格式</p>
+      <input type="file" id="quizFileInput" accept=".json,.docx,.md,.pdf" style="display:none;" />
+      <button class="btn btn-accent btn-sm" style="margin-top:var(--space-4);" id="quizSelectBtn">选择文件</button>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:var(--space-2); margin-top:var(--space-3); padding:var(--space-3); background:var(--color-warning-bg); border-radius:var(--radius-md);">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--color-warning)" stroke-width="1.5"><circle cx="8" cy="8" r="7"/><path d="M8 5v3M8 11.5v.5" stroke-linecap="round"/></svg>
+      <span style="font-size:var(--text-sm); color:var(--color-warning);">仅支持选择题（单选），其他题型请转换为选择题格式</span>
+    </div>
+
+    <div id="quizFileInfo" style="display:none; margin-top:var(--space-3); padding:var(--space-3) var(--space-4); background:var(--color-bg-surface); border-radius:var(--radius-md);">
+      <div style="display:flex; align-items:center; gap:var(--space-2);">
+        <span class="badge badge-success">已加载</span>
+        <span style="font-size:var(--text-sm); color:var(--color-text-secondary);" id="quizFileName">-</span>
+        <span style="font-size:var(--text-xs); color:var(--color-text-tertiary);" id="quizQuestionCount">0 题</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="quizClearFile">清除</button>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ==================== SETTINGS ==================== -->
+  <section style="margin-bottom:var(--space-8);">
+    <h2 style="font-size:var(--text-lg); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-4);">刷题设置</h2>
+
+    <div style="display:flex; flex-direction:column; gap:var(--space-3); max-width:var(--input-max-width);">
+      <!-- Wrong repeat toggle -->
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:var(--space-3) var(--space-4); background:var(--color-bg-surface); border-radius:var(--radius-md);">
+        <div>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">错题重复</span>
+          <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px;">答错后将该题重新加入待刷队列</p>
+        </div>
+        <label style="position:relative; display:inline-block; width:40px; height:22px; cursor:pointer;">
+          <input type="checkbox" id="quizWrongRepeat" checked style="opacity:0; width:0; height:0;" />
+          <span style="position:absolute; inset:0; background:var(--color-accent); border-radius:var(--radius-full); transition:background var(--duration-fast);"></span>
+          <span style="position:absolute; left:3px; top:3px; width:16px; height:16px; background:#fff; border-radius:var(--radius-full); transition:transform var(--duration-fast); transform:translateX(18px);"></span>
+        </label>
+      </div>
+
+      <!-- Auto-remove toggle -->
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:var(--space-3) var(--space-4); background:var(--color-bg-surface); border-radius:var(--radius-md);">
+        <div>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">自动移除已掌握</span>
+          <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px;">连续答对多次后自动移出题库</p>
+        </div>
+        <label style="position:relative; display:inline-block; width:40px; height:22px; cursor:pointer;">
+          <input type="checkbox" id="quizAutoRemove" style="opacity:0; width:0; height:0;" />
+          <span style="position:absolute; inset:0; background:var(--color-bg-elevated); border-radius:var(--radius-full); transition:background var(--duration-fast);"></span>
+          <span style="position:absolute; left:3px; top:3px; width:16px; height:16px; background:#fff; border-radius:var(--radius-full); transition:transform var(--duration-fast);"></span>
+        </label>
+      </div>
+
+      <!-- Questions per round -->
+      <div style="padding:var(--space-3) var(--space-4); background:var(--color-bg-surface); border-radius:var(--radius-md);">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div>
+            <span style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-text-primary);">每轮题数</span>
+            <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px;">每轮刷题出现的问题数量</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:var(--space-3);">
+            <button class="btn btn-ghost btn-sm" id="quizRoundDec" style="width:30px; padding:0;">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10" stroke-linecap="round"/></svg>
+            </button>
+            <span style="font-size:var(--text-lg); font-weight:var(--weight-semibold); color:var(--color-text-primary); min-width:40px; text-align:center;" id="quizRoundCount">20</span>
+            <button class="btn btn-ghost btn-sm" id="quizRoundInc" style="width:30px; padding:0;">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== START BUTTON ==================== -->
+  <div style="text-align:center; padding:var(--space-4) 0 var(--space-8);">
+    <button class="btn btn-accent btn-lg" id="quizStartBtn" style="padding:0 var(--space-10);">
+      <svg style="width:16px; height:16px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 2v12l10-6L4 2z"/></svg>
+      开始刷题
+    </button>
+    <p style="margin-top:var(--space-3); font-size:var(--text-xs); color:var(--color-text-tertiary);">请先导入题库文件后再开始</p>
+  </div>
+
+</div>

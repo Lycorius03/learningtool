@@ -1,0 +1,101 @@
+/* ============================================================
+   PaperLens Design Tokens — Claude Aesthetic
+   参考 claude-aesthetic-template.html 设计令牌系统
+   ============================================================ */
+:root {
+  /* --- COLOR PALETTE (暖色调) --- */
+  --color-bg-base:        #FAF9F6;
+  --color-bg-surface:     #F5F3EF;
+  --color-bg-elevated:    #EDEAE3;
+  --color-bg-sunken:      #E8E4DC;
+  --color-bg-white:       #FFFFFF;
+
+  --color-border-subtle:  #E8E4DC;
+  --color-border-default: #D9D5CC;
+  --color-border-strong:  #C4BFB5;
+
+  --color-text-primary:   #1A1816;
+  --color-text-secondary: #5C5751;
+  --color-text-tertiary:  #9C9690;
+  --color-text-disabled:  #C4BFB5;
+
+  --color-accent:         #D97757;
+  --color-accent-soft:    #F0D5C8;
+  --color-accent-hover:   #C4643E;
+  --color-accent-subtle:  rgba(217, 119, 87, 0.08);
+
+  --color-success:        #5A8A6A;
+  --color-success-bg:     #EBF4EE;
+  --color-warning:        #B07D3A;
+  --color-warning-bg:     #FDF3E3;
+  --color-error:          #A64040;
+  --color-error-bg:       #FAEAEA;
+  --color-info:           #3D6B8A;
+  --color-info-bg:        #E8F0F6;
+
+  /* --- TYPOGRAPHY --- */
+  --font-sans:  'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:  'DM Mono', 'Fira Code', monospace;
+
+  --text-xs:    0.75rem;
+  --text-sm:    0.8125rem;
+  --text-base:  0.9375rem;
+  --text-md:    1rem;
+  --text-lg:    1.125rem;
+  --text-xl:    1.25rem;
+  --text-2xl:   1.5rem;
+  --text-3xl:   1.875rem;
+
+  --leading-tight:   1.25;
+  --leading-snug:    1.4;
+  --leading-normal:  1.6;
+  --leading-relaxed: 1.75;
+
+  --weight-light:   300;
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semibold: 600;
+
+  /* --- SPACING (4px base) --- */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+
+  /* --- RADII --- */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   18px;
+  --radius-full: 9999px;
+
+  /* --- SHADOWS (暖色调) --- */
+  --shadow-xs:  0 1px 2px rgba(26,24,22,0.06);
+  --shadow-sm:  0 1px 4px rgba(26,24,22,0.08), 0 1px 2px rgba(26,24,22,0.04);
+  --shadow-md:  0 4px 12px rgba(26,24,22,0.08), 0 2px 4px rgba(26,24,22,0.04);
+  --shadow-lg:  0 8px 24px rgba(26,24,22,0.10), 0 3px 8px rgba(26,24,22,0.06);
+  --shadow-xl:  0 16px 40px rgba(26,24,22,0.12), 0 6px 16px rgba(26,24,22,0.08);
+
+  /* --- TRANSITIONS --- */
+  --ease-default: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:      cubic-bezier(0.4, 0, 1, 1);
+  --ease-out:     cubic-bezier(0, 0, 0.2, 1);
+  --ease-inout:   cubic-bezier(0.4, 0, 0.2, 1);
+
+  --duration-fast:   120ms;
+  --duration-base:   200ms;
+  --duration-slow:   300ms;
+  --duration-slower: 500ms;
+
+  /* --- LAYOUT --- */
+  --sidebar-width: 260px;
+  --topbar-height: 52px;
+  --content-max-width: 780px;
+  --input-max-width: 720px;
+}

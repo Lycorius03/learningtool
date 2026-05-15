@@ -1,0 +1,82 @@
+<div class="page-content-inner" style="display:flex; flex-direction:column; height:calc(100vh - var(--topbar-height) - var(--space-6)*2);">
+
+  <!-- ==================== EMPTY STATE / DROP ZONE ==================== -->
+  <div id="readerDropZone" class="drop-zone anim-fade-in-up" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+    <svg class="drop-zone-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M14 10v2.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 12.5V10"/>
+      <path d="M8 2v8M4.5 5.5L8 2l3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <p class="drop-zone-title">导入论文文件</p>
+    <p class="drop-zone-desc">点击此处或拖拽文件 — 支持 PDF、DOCX、TXT、MD</p>
+    <input type="file" id="readerFileInput" accept=".pdf,.docx,.txt,.md" style="display:none;" />
+    <button class="btn btn-accent" style="margin-top:var(--space-4);" id="readerSelectBtn">
+      <svg style="width:15px;height:15px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h10M3 5v8a1 1 0 001 1h8a1 1 0 001-1V5M3 5l1.5-3h7L13 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      选择文件
+    </button>
+  </div>
+
+  <!-- ==================== FILE LOADED: SPLIT PANEL ==================== -->
+  <div id="readerSplitPanel" class="split-panel anim-fade-in-up" style="display:none; flex:1; min-height:0;">
+
+    <!-- LEFT: Document text -->
+    <div class="split-panel-left" id="readerDocPane">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3);">
+        <span class="badge badge-accent" id="readerFileBadge">论文</span>
+        <div style="display:flex; align-items:center; gap:var(--space-1);">
+          <button class="icon-btn" data-tooltip="标注模式" id="readerAnnotateToggle" title="标注模式">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14l1-4 10-10 3 3-10 10-4 1z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="icon-btn" data-tooltip="导出标注" id="readerExportBtn" title="导出标注">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 10v2.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 12.5V10M8 2v8M4.5 5.5L8 2l3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="readerDocContent" style="font-size:var(--text-base); line-height:var(--leading-relaxed); color:var(--color-text-primary);">
+        <!-- Document text rendered here by reader-core.js -->
+      </div>
+    </div>
+
+    <!-- RIGHT: AI explanation -->
+    <div class="split-panel-right" id="readerAiPane" style="background:var(--color-bg-surface);">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3);">
+        <div style="display:flex; align-items:center; gap:var(--space-2);">
+          <span class="badge badge-info">AI 解析</span>
+        </div>
+        <button class="icon-btn" data-tooltip="清空对话" id="readerClearChat" title="清空对话">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12l-1 10H3L2 4zM6 2h4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+      <div id="readerAiContent" style="font-size:var(--text-sm); line-height:var(--leading-normal); color:var(--color-text-secondary);">
+        <div class="empty-state" style="padding:var(--space-8) var(--space-4);">
+          <svg class="empty-state-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="7"/><path d="M8 5v3M8 11.5v.5" stroke-linecap="round"/></svg>
+          <p class="empty-state-title">选择文本开始解析</p>
+          <p class="empty-state-desc">在左侧选中论文段落，AI 将自动解释术语、逻辑与方法论。</p>
+        </div>
+      </div>
+
+      <!-- AI input area -->
+      <div id="readerAiInput" style="margin-top:var(--space-4); display:none;">
+        <textarea class="form-textarea" id="readerAiPrompt" rows="2" placeholder="追问 AI..." style="min-height:50px;"></textarea>
+        <div style="display:flex; justify-content:flex-end; margin-top:var(--space-2);">
+          <button class="btn btn-primary btn-sm" id="readerAiSend">
+            <svg style="width:14px;height:14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2l12 6-12 6 3-6-3-6z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            发送
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== KEYBOARD HINT ==================== -->
+  <div id="readerKeyHint" style="display:none; text-align:center; padding:var(--space-3) 0 0; font-size:var(--text-xs); color:var(--color-text-tertiary); border-top:1px solid var(--color-border-subtle); margin-top:var(--space-4);">
+    <kbd style="display:inline-block; padding:1px 6px; background:var(--color-bg-elevated); border:1px solid var(--color-border-default); border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:var(--text-xs); margin:0 2px;">Tab</kbd>
+    切换左右面板 &middot;
+    <kbd style="display:inline-block; padding:1px 6px; background:var(--color-bg-elevated); border:1px solid var(--color-border-default); border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:var(--text-xs); margin:0 2px;">Esc</kbd>
+    退出标注模式 &middot;
+    选中文本即可触发 AI 解析
+  </div>
+
+</div>

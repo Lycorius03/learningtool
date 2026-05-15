@@ -1,0 +1,87 @@
+<div class="page-content-inner">
+
+  <!-- ==================== HERO SECTION ==================== -->
+  <section class="anim-fade-in-up" style="text-align:center; padding: var(--space-12) 0 var(--space-10);">
+    <div style="display:flex; align-items:center; justify-content:center; gap:var(--space-3); margin-bottom:var(--space-4);">
+      <div style="width:48px; height:48px; background:var(--color-text-primary); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; color:var(--color-bg-base); font-size:var(--text-xl); font-weight:var(--weight-semibold);">P</div>
+      <div>
+        <h1 style="font-size:var(--text-3xl); font-weight:var(--weight-semibold); color:var(--color-text-primary); line-height:1.2; margin:0;">PaperLens</h1>
+        <p style="font-size:var(--text-base); color:var(--color-text-secondary); margin:var(--space-1) 0 0;">智能论文阅读 &middot; 科学刷题</p>
+      </div>
+    </div>
+    <p style="max-width:480px; margin:0 auto; font-size:var(--text-sm); color:var(--color-text-tertiary); line-height:var(--leading-relaxed);">
+      导入论文，AI 助你深度理解；导入题库，智能算法帮你高效刷题。让学术更轻松。
+    </p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ==================== FEATURE CARDS ==================== -->
+  <section class="stagger-children" style="display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-4); margin-bottom:var(--space-8);">
+    <div class="card hover-lift" style="cursor:pointer;" data-route="reader" onclick="window.__paperlens?.router?.navigate('reader')">
+      <div class="card-body" style="text-align:center; padding:var(--space-4) 0;">
+        <div style="width:44px; height:44px; margin:0 auto var(--space-3); background:var(--color-accent-soft); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="var(--color-accent)" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M6 6h4M6 9h3" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="card-header" style="margin-bottom:var(--space-1); font-size:var(--text-lg);">论文阅读</h3>
+        <p style="font-size:var(--text-sm); color:var(--color-text-tertiary); line-height:var(--leading-snug);">导入 PDF/DOCX/TXT/MD，AI 逐段解析论文要点与术语</p>
+      </div>
+    </div>
+
+    <div class="card hover-lift" style="cursor:pointer;" data-route="quiz" onclick="window.__paperlens?.router?.navigate('quiz')">
+      <div class="card-body" style="text-align:center; padding:var(--space-4) 0;">
+        <div style="width:44px; height:44px; margin:0 auto var(--space-3); background:var(--color-success-bg); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="var(--color-success)" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5.5 7.5l2 2 3.5-3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 class="card-header" style="margin-bottom:var(--space-1); font-size:var(--text-lg);">智能刷题</h3>
+        <p style="font-size:var(--text-sm); color:var(--color-text-tertiary); line-height:var(--leading-snug);">MFAW 加权乱序算法 + 错题本，科学提升学习效率</p>
+      </div>
+    </div>
+
+    <div class="card hover-lift">
+      <div class="card-body" style="text-align:center; padding:var(--space-4) 0;">
+        <div style="width:44px; height:44px; margin:0 auto var(--space-3); background:var(--color-info-bg); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="var(--color-info)" stroke-width="1.5"><circle cx="6" cy="6" r="1.5" fill="var(--color-info)"/><path d="M3 13c0-2 2.5-3.5 5-3.5s5 1.5 5 3.5" stroke-linecap="round"/><circle cx="8" cy="8" r="7"/></svg>
+        </div>
+        <h3 class="card-header" style="margin-bottom:var(--space-1); font-size:var(--text-lg);">AI 辅助</h3>
+        <p style="font-size:var(--text-sm); color:var(--color-text-tertiary); line-height:var(--leading-snug);">阅读中随时划词提问，AI 即时解答疑惑</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ==================== QUICK START SUGGESTIONS ==================== -->
+  <section style="margin-bottom:var(--space-6);">
+    <h2 style="font-size:var(--text-md); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-4);">快速开始</h2>
+    <div style="display:flex; flex-wrap:wrap; gap:var(--space-2);">
+      <button class="btn btn-secondary btn-sm" data-route="reader" onclick="window.__paperlens?.router?.navigate('reader')">
+        <svg style="width:14px;height:14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2v12l5-3 5 3V2a1 1 0 00-1-1H4a1 1 0 00-1 1z"/></svg>
+        导入论文开始阅读
+      </button>
+      <button class="btn btn-secondary btn-sm" data-route="quiz" onclick="window.__paperlens?.router?.navigate('quiz')">
+        <svg style="width:14px;height:14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5.5 7.5l2 2 3.5-3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        开始刷题
+      </button>
+      <button class="btn btn-secondary btn-sm" data-route="template" onclick="window.__paperlens?.router?.navigate('template')">
+        <svg style="width:14px;height:14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 7l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        查看题库模板
+      </button>
+      <button class="btn btn-secondary btn-sm" data-route="settings" onclick="window.__paperlens?.router?.navigate('settings')">
+        <svg style="width:14px;height:14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1.5v1.5M8 13v1.5M3.5 3.5l1 1M11.5 11.5l1 1M1.5 8H3M13 8h1.5M3.5 12.5l1-1M11.5 4.5l1-1"/></svg>
+        配置 API 与设置
+      </button>
+    </div>
+  </section>
+
+  <!-- ==================== STATUS BAR ==================== -->
+  <div style="display:flex; align-items:center; gap:var(--space-4); padding:var(--space-4); background:var(--color-bg-surface); border-radius:var(--radius-lg); font-size:var(--text-sm); color:var(--color-text-secondary);">
+    <div style="display:flex; align-items:center; gap:var(--space-1);">
+      <span style="width:8px; height:8px; border-radius:var(--radius-full); background:var(--color-success); display:inline-block;"></span>
+      <span>系统就绪</span>
+    </div>
+    <span style="color:var(--color-border-strong);">|</span>
+    <span>支持格式: PDF &middot; DOCX &middot; TXT &middot; MD &middot; JSON</span>
+  </div>
+
+</div>
