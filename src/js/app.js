@@ -2,18 +2,32 @@
  * LearningTool — Entry Point
  * No navbar. Custom cursor. Router. Admin entrance.
  */
+
+// Initialize theme immediately to prevent flash
+(function() {
+  try {
+    const theme = localStorage.getItem('paperlens_theme');
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+    // Default is light — no class needed
+  } catch (e) { /* ignore */ }
+})();
+
 import { Router } from './router.js';
 import { AppState } from './state.js';
 import { AdminEntrance } from './modules/admin/entrance.js';
 import { showToast } from './utils/toast.js';
+import { smoothScroll } from './services/smooth-scroll.js';
+import { initMagneticEffects } from './utils/magnetic.js';
 
 const state = new AppState();
 const router = new Router(state);
-window.__lt = { state, router };
+window.__lt = { state, router, smoothScroll };
 
-state.loadFromStorage();
+await state.loadFromStorage();
 
-// --- Custom cursor (gemini-code V12 style) ---
+// --- Custom cursor (smooth lerp following) ---
 (function() {
   const dot = document.getElementById('cursorDot');
   if (!dot || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) { if (dot) dot.remove(); return; }
@@ -24,9 +38,19 @@ state.loadFromStorage();
   document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
   function tick() {
-    pos.x += (mouse.x - pos.x) * 0.25;
-    pos.y += (mouse.y - pos.y) * 0.25;
-    dot.style.transform = `translate3d(${pos.x - (active ? 20 : 3)}px, ${pos.y - (active ? 20 : 3)}px, 0)`;
+    pos.x += (mouse.x - pos.x) * 0.22;
+    pos.y += (mouse.y - pos.y) * 0.22;
+    const size = active ? 20 : 3;
+    dot.style.transform = `translate3d(${pos.x - size}px, ${pos.y - size}px, 0)`;
+    if (active) {
+      dot.style.width = '40px'; dot.style.height = '40px';
+      dot.style.backgroundColor = 'var(--color-accent)';
+      dot.style.opacity = '0.15';
+    } else {
+      dot.style.width = '6px'; dot.style.height = '6px';
+      dot.style.backgroundColor = 'var(--color-text-primary)';
+      dot.style.opacity = '1';
+    }
     requestAnimationFrame(tick);
   }
   tick();
@@ -34,12 +58,12 @@ state.loadFromStorage();
   const hoverSel = 'a, button, .btn, .card, .bento-card, .tool-item, [data-route], .quiz-option, .drop-zone, .topnav-link, .nav-item, [data-hover]';
   document.addEventListener('mouseover', e => {
     const el = e.target.closest(hoverSel);
-    if (el) { active = true; dot.classList.add('hover'); }
-    else { active = false; dot.classList.remove('hover'); }
+    active = !!el;
+    if (el) dot.classList.add('hover'); else dot.classList.remove('hover');
   });
 
-  document.addEventListener('mousedown', () => { dot.style.transform += ' scale(0.6)'; });
-  document.addEventListener('mouseup', () => { dot.style.transform = dot.style.transform.replace(' scale(0.6)', ' scale(1)'); });
+  document.addEventListener('mousedown', () => { dot.style.transform = dot.style.transform.replace('scale(1)', '') + ' scale(0.7)'; });
+  document.addEventListener('mouseup', () => { dot.style.transform = dot.style.transform.replace(' scale(0.7)', ''); });
 })();
 
 // --- Admin ---
@@ -49,44 +73,146 @@ state.onAdminChange(isAdmin => {
   document.getElementById('modelBadge') && (document.getElementById('modelBadge').style.display = isAdmin ? 'inline-flex' : 'none');
 });
 
-// --- Linear spotlight: track mouse on all cards ---
+// --- Linear spotlight: track mouse on all cards (RAF-throttled) ---
+let _spotlightPending = false;
+let _spotlightX = 0, _spotlightY = 0;
 document.addEventListener('mousemove', e => {
-  document.querySelectorAll('.card, .bento-card, .tool-item').forEach(card => {
-    const r = card.getBoundingClientRect();
-    card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-    card.style.setProperty('--my', (e.clientY - r.top) + 'px');
-  });
+  _spotlightX = e.clientX; _spotlightY = e.clientY;
+  if (!_spotlightPending) {
+    _spotlightPending = true;
+    requestAnimationFrame(() => {
+      _spotlightPending = false;
+      document.querySelectorAll('.card, .bento-card, .tool-item').forEach(card => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (_spotlightX - r.left) + 'px');
+        card.style.setProperty('--my', (_spotlightY - r.top) + 'px');
+      });
+    });
+  }
 }, { passive: true });
 
-// --- IntersectionObserver: scroll reveal ---
+// --- Scroll reveal (GSAP ScrollTrigger if available, IntersectionObserver fallback) ---
 (function() {
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
+  var hasGSAP = !!(window.gsap && window.ScrollTrigger);
+
+  if (hasGSAP) {
+    window.gsap.registerPlugin(window.ScrollTrigger);
+  }
+
+  // Inject reveal CSS
+  var style = document.createElement('style');
+  style.textContent = '.reveal { will-change: transform, opacity; } .reveal:not(.revealed) { opacity: 0; transform: translateY(28px) rotate(0.3deg); } .stagger-children > *:not(.revealed) { opacity: 0; transform: translateY(20px); }';
+  document.head.appendChild(style);
+
+  function setupGSAPScrollReveals() {
+    if (!window.gsap || !window.ScrollTrigger) return;
+    window.ScrollTrigger.refresh();
+
+    document.querySelectorAll('.reveal:not(.revealed)').forEach(function(el) {
+      el.classList.add('revealed');
+      window.gsap.fromTo(el,
+        { opacity: 0, y: 30, rotate: 0.5 },
+        { opacity: 1, y: 0, rotate: 0, duration: 0.9, ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' } }
+      );
+    });
+
+    document.querySelectorAll('.stagger-children').forEach(function(container) {
+      if (container.dataset.staggered === 'true') return;
+      container.dataset.staggered = 'true';
+      var children = container.querySelectorAll(':scope > *');
+      window.gsap.fromTo(children,
+        { opacity: 0, y: 32 },
+        { opacity: 1, y: 0, duration: 0.65, stagger: 0.08, ease: 'power2.out',
+          scrollTrigger: { trigger: container, start: 'top 92%', toggleActions: 'play none none none' } }
+      );
+    });
+
+    document.querySelectorAll('.hero, .docs-hero').forEach(function(hero) {
+      if (hero.dataset.parallaxed === 'true') return;
+      hero.dataset.parallaxed = 'true';
+      window.gsap.to(hero.querySelector('.hero-title, .docs-heading') || hero.firstElementChild, {
+        y: -40, ease: 'none',
+        scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.6 }
+      });
+    });
+  }
+
+  // ─── IntersectionObserver fallback (always works, no CDN needed) ───
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
       if (entry.isIntersecting) {
         entry.target.classList.add('revealed');
+        io.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.15 });
+  }, { threshold: 0.12 });
 
-  // Observe stagger-children on each page load
-  document.addEventListener('page-loaded', () => {
-    document.querySelectorAll('.stagger-children > *, .reveal').forEach(el => {
-      el.style.opacity = '0';
-      observer.observe(el);
+  function setupIOReveals() {
+    document.querySelectorAll('.reveal:not(.revealed), .stagger-children > *:not(.revealed)').forEach(function(el) {
+      io.observe(el);
     });
+  }
+
+  // Page navigation
+  document.addEventListener('page-loaded', function() {
+    setTimeout(function() {
+      if (hasGSAP) { setupGSAPScrollReveals(); } else { setupIOReveals(); }
+      initMagneticEffects();
+    }, 100);
   });
 
-  // CSS for revealed state
-  const style = document.createElement('style');
-  style.textContent = `
-    .revealed { animation: revealIn 0.7s var(--ease-default) forwards; }
-    @keyframes revealIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  `;
-  document.head.appendChild(style);
+  // Initial run
+  setTimeout(function() {
+    if (hasGSAP) { setupGSAPScrollReveals(); } else { setupIOReveals(); }
+  }, 300);
 })();
 
 // --- Start ---
 try {
+  // Initialize smooth scroll engine (Lenis)
+  smoothScroll.init();
+
+  // Scroll progress bar (Lenis if available, native scroll fallback)
+  const scrollBar = document.getElementById('scrollProgressBar');
+  if (scrollBar) {
+    const hasLenis = smoothScroll._lenis !== null;
+    if (hasLenis) {
+      smoothScroll.onScroll(({ progress }) => {
+        scrollBar.style.width = (progress * 100).toFixed(1) + '%';
+      });
+    } else {
+      // Native scroll fallback
+      const scrollEl = document.querySelector('.page-content');
+      if (scrollEl) {
+        scrollEl.addEventListener('scroll', () => {
+          const h = scrollEl.scrollHeight - scrollEl.clientHeight;
+          scrollBar.style.width = h > 0 ? (scrollEl.scrollTop / h * 100).toFixed(1) + '%' : '0%';
+        }, { passive: true });
+      }
+    }
+  }
+
+  // Connect parallax orbs (GSAP if available, CSS transform fallback)
+  const orbs = document.querySelectorAll('.orb');
+  if (orbs.length && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    var hasGsap = typeof gsap !== 'undefined';
+    document.addEventListener('mousemove', function(e) {
+      var x = (e.clientX / window.innerWidth - 0.5) * 20;
+      var y = (e.clientY / window.innerHeight - 0.5) * 20;
+      if (hasGsap) {
+        gsap.to(orbs[0], { x: x * 0.6, y: y * 0.6, duration: 1.5, ease: 'power2.out' });
+        gsap.to(orbs[1], { x: x * -0.4, y: y * -0.4, duration: 1.8, ease: 'power2.out' });
+        gsap.to(orbs[2], { x: x * 0.3, y: y * 0.3, duration: 2.0, ease: 'power2.out', xPercent: -50, yPercent: -50 });
+      } else {
+        // Fallback: raw CSS transform (no GSAP)
+        orbs[0].style.transform = 'translate(' + (x * 0.6) + 'px, ' + (y * 0.6) + 'px)';
+        orbs[1].style.transform = 'translate(' + (x * -0.4) + 'px, ' + (y * -0.4) + 'px)';
+        orbs[2].style.transform = 'translate(-50%, -50%) translate(' + (x * 0.3) + 'px, ' + (y * 0.3) + 'px)';
+      }
+    }, { passive: true });
+  }
+
   router.start();
   console.log('LearningTool started');
 } catch (e) {

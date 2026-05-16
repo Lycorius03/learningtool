@@ -28,7 +28,7 @@ export class AppState {
   }
 
   // --- Persistence ---
-  loadFromStorage() {
+  async loadFromStorage() {
     try {
       const data = JSON.parse(localStorage.getItem('paperlens_state') || '{}');
       this.userApiKeys = data.userApiKeys || {};
@@ -37,6 +37,20 @@ export class AppState {
       this.settings = { ...this.settings, ...(data.settings || {}) };
     } catch (e) {
       console.warn('Failed to load state from localStorage', e);
+    }
+
+    // Verify admin session is still valid on server
+    try {
+      const resp = await fetch('/api/admin/status');
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.isAdmin) {
+          this.isAdmin = true;
+          this._adminCallbacks.forEach(cb => cb(true));
+        }
+      }
+    } catch (e) {
+      // Server not reachable or not logged in — stay logged out
     }
   }
 
@@ -60,15 +74,16 @@ export class AppState {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
-    if (!resp.ok) throw new Error('登录失败');
     const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || '登录失败');
     this.isAdmin = true;
     this.adminSessionId = data.sessionId;
     this._adminCallbacks.forEach(cb => cb(true));
     this.saveToStorage();
   }
 
-  logout() {
+  async logout() {
+    try { await fetch('/api/admin/logout', { method: 'POST' }); } catch (e) { /* ignore network errors */ }
     this.isAdmin = false;
     this.adminSessionId = null;
     this._adminCallbacks.forEach(cb => cb(false));
@@ -77,6 +92,8 @@ export class AppState {
 
   onAdminChange(callback) {
     this._adminCallbacks.push(callback);
+    // Immediately fire with current state if already admin
+    if (this.isAdmin) callback(true);
   }
 
   // --- API Keys ---

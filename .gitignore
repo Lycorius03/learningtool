@@ -1,9 +1,13 @@
 node_modules/
 .env
 data/
-.superpowers/
-*.tar.gz
 *.log
+*.tar.gz
 .DS_Store
 Thumbs.db
+
+# Development artifacts (keep locally, never push)
+AUDIT_LOG.md
+docs/
+.superpowers/
 .claude/

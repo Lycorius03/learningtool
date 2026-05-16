@@ -65,7 +65,7 @@ export class Exporter {
 
     lines.push('---');
     lines.push('');
-    lines.push('*由 PaperLens 生成*');
+    lines.push('*由 LearningTool 生成*');
 
     return lines.join('\n');
   }
@@ -122,13 +122,14 @@ export class Exporter {
    * @param {string} title
    * @returns {Promise<object>} Server response JSON
    */
-  async serverExport(annotations, title) {
+  async serverExport(annotations, title, format = 'md') {
     const resp = await fetch('/api/files/export-annotations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title,
         annotations,
+        format,
         exportedAt: new Date().toISOString()
       })
     });

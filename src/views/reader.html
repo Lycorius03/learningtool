@@ -1,83 +1,117 @@
-<div class="page-content-inner" style="display:flex; flex-direction:column; height:100%;">
-  <button class="back-btn" onclick="window.__lt?.router?.navigate('home')">&larr; Home</button>
+<div class="page-content-inner" style="display:flex; flex-direction:column; height:100%; padding:0; max-width:none;">
+  <!-- Top bar -->
+  <div style="display:flex; align-items:center; gap:var(--space-3); padding:var(--space-2) var(--space-4); border-bottom:1px solid var(--color-border-subtle); min-height:48px; flex-shrink:0;">
+    <button class="back-btn" onclick="window.__lt?.router?.navigate('home')" style="margin-bottom:0;">&larr; Home</button>
+    <span style="flex:1;"></span>
+    <span class="badge badge-accent" id="readerFileBadge" style="display:none;"></span>
+  </div>
 
   <!-- ==================== EMPTY STATE / DROP ZONE ==================== -->
-  <div id="readerDropZone" class="drop-zone anim-fade-in-up" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+  <div id="readerDropZone" class="drop-zone anim-fade-in-up" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:var(--space-8);">
     <svg class="drop-zone-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
       <path d="M14 10v2.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 12.5V10"/>
       <path d="M8 2v8M4.5 5.5L8 2l3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-    <p class="drop-zone-title">导入论文文件</p>
-    <p class="drop-zone-desc">点击此处或拖拽文件 — 支持 PDF、DOCX、TXT、MD</p>
-    <input type="file" id="readerFileInput" accept=".pdf,.docx,.txt,.md" style="display:none;" />
+    <p class="drop-zone-title" data-i18n="reader.importTitle">Import Paper</p>
+    <p class="drop-zone-desc" data-i18n="reader.importDesc">Click or drag — PDF, DOCX, TXT, MD, JSON</p>
+    <input type="file" id="readerFileInput" accept=".pdf,.docx,.txt,.md,.json" style="display:none;" />
     <button class="btn btn-accent" style="margin-top:var(--space-4);" id="readerSelectBtn">
       <svg style="width:15px;height:15px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h10M3 5v8a1 1 0 001 1h8a1 1 0 001-1V5M3 5l1.5-3h7L13 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      选择文件
+      <span data-i18n="reader.selectFile">Select File</span>
     </button>
+
+    <!-- Paper history -->
+    <div id="readerPaperHistory" style="display:none; margin-top:var(--space-6); max-width:500px; width:100%; text-align:left;">
+      <div style="font-size:var(--text-xs); font-weight:var(--weight-medium); color:var(--color-text-tertiary); margin-bottom:var(--space-2); text-align:center;" data-i18n="reader.recentPapers">Recently imported</div>
+      <div class="paper-history-list" style="display:flex; flex-direction:column; gap:2px;"></div>
+    </div>
   </div>
 
-  <!-- ==================== FILE LOADED: SPLIT PANEL ==================== -->
-  <div id="readerSplitPanel" class="split-panel anim-fade-in-up" style="display:none; flex:1; min-height:0;">
+  <!-- ==================== FILE LOADED: MAIN CONTENT ==================== -->
+  <div id="readerMainContent" style="display:none; flex:1; min-height:0; flex-direction:column;">
 
-    <!-- LEFT: Document text -->
-    <div class="split-panel-left" id="readerDocPane">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3);">
-        <span class="badge badge-accent" id="readerFileBadge">论文</span>
-        <div style="display:flex; align-items:center; gap:var(--space-1);">
-          <button class="icon-btn" data-tooltip="标注模式" id="readerAnnotateToggle" title="标注模式">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14l1-4 10-10 3 3-10 10-4 1z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <button class="icon-btn" data-tooltip="导出标注" id="readerExportBtn" title="导出标注">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 10v2.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 12.5V10M8 2v8M4.5 5.5L8 2l3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <div id="readerDocContent" style="font-size:var(--text-base); line-height:var(--leading-relaxed); color:var(--color-text-primary);">
-        <!-- Document text rendered here by reader-core.js -->
-      </div>
+    <!-- Explanation source selector -->
+    <div id="readerSourceSelector" style="display:flex; align-items:center; gap:var(--space-3); padding:var(--space-2) var(--space-4); border-bottom:1px solid var(--color-border-subtle); background:var(--color-bg-surface); flex-shrink:0;">
+      <span style="font-size:var(--text-xs); color:var(--color-text-secondary);" data-i18n="reader.explanationSource">Explanation source:</span>
+      <button class="btn btn-accent btn-sm reader-source-btn active" data-source="ai" id="sourceBtnAI">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5 8h6M8 5v6" stroke-linecap="round"/></svg>
+        <span data-i18n="reader.aiExplain">AI Analysis</span>
+      </button>
+      <button class="btn btn-ghost btn-sm reader-source-btn" data-source="file" id="sourceBtnFile">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h10M3 5v8a1 1 0 001 1h8a1 1 0 001-1V5M3 5l1.5-3h7L13 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-i18n="reader.importExplain">Import Explanation</span>
+      </button>
+      <input type="file" id="readerExplanationFileInput" accept=".pdf,.docx,.txt,.md,.json" style="display:none;" />
+      <span style="flex:1;"></span>
+      <span style="font-size:var(--text-xs); color:var(--color-text-tertiary);" id="readerFocusHint"></span>
+      <button class="icon-btn" data-tooltip="Annotate" id="readerAnnotateToggle" title="Annotate" style="display:none;">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14l1-4 10-10 3 3-10 10-4 1z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="icon-btn" data-tooltip="Export annotations" id="readerExportBtn" title="Export annotations" style="display:none;">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 10v2.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 12.5V10M8 2v8M4.5 5.5L8 2l3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="icon-btn" data-tooltip="Clear chat" id="readerClearChat" title="Clear chat" style="display:none;">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12l-1 10H3L2 4zM6 2h4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
     </div>
 
-    <!-- RIGHT: AI explanation -->
-    <div class="split-panel-right" id="readerAiPane" style="background:var(--color-bg-surface);">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-3);">
-        <div style="display:flex; align-items:center; gap:var(--space-2);">
-          <span class="badge badge-info">AI 解析</span>
-        </div>
-        <button class="icon-btn" data-tooltip="清空对话" id="readerClearChat" title="清空对话">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12l-1 10H3L2 4zM6 2h4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-      </div>
+    <!-- Split panel: Document + Explanation -->
+    <div id="readerSplitPanel" class="split-panel" style="flex:1; min-height:0;">
 
-      <div id="readerAiContent" style="font-size:var(--text-sm); line-height:var(--leading-normal); color:var(--color-text-secondary);">
-        <div class="empty-state" style="padding:var(--space-8) var(--space-4);">
-          <svg class="empty-state-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="7"/><path d="M8 5v3M8 11.5v.5" stroke-linecap="round"/></svg>
-          <p class="empty-state-title">选择文本开始解析</p>
-          <p class="empty-state-desc">在左侧选中论文段落，AI 将自动解释术语、逻辑与方法论。</p>
+      <!-- LEFT: Original Document -->
+      <div class="split-panel-left focused" id="readerDocPane">
+        <div style="height:100%; display:flex; flex-direction:column;">
+          <div id="readerDocViewer" style="flex:1; min-height:0; overflow:auto;">
+            <!-- PDF embed or text content rendered here -->
+          </div>
         </div>
       </div>
 
-      <!-- AI input area -->
-      <div id="readerAiInput" style="margin-top:var(--space-4); display:none;">
-        <textarea class="form-textarea" id="readerAiPrompt" rows="2" placeholder="追问 AI..." style="min-height:50px;"></textarea>
-        <div style="display:flex; justify-content:flex-end; margin-top:var(--space-2);">
-          <button class="btn btn-primary btn-sm" id="readerAiSend">
-            <svg style="width:14px;height:14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2l12 6-12 6 3-6-3-6z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            发送
-          </button>
+      <!-- RIGHT: AI Explanation or Imported Explanation -->
+      <div class="split-panel-right" id="readerExplanationPane" style="background:var(--color-bg-surface);">
+        <div style="height:100%; display:flex; flex-direction:column;">
+          <!-- AI Chat Panel -->
+          <div id="readerAiPanel" style="flex:1; min-height:0; display:flex; flex-direction:column;">
+            <div class="ai-chat-area" style="flex:1; display:flex; flex-direction:column; min-height:0;">
+              <div class="ai-chat-messages" id="aiChatMessages" style="flex:1; overflow-y:auto; padding:var(--space-3);">
+                <div class="chat-welcome" style="text-align:center; padding:var(--space-8) var(--space-4); color:var(--color-text-tertiary); font-size:var(--text-sm);">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;margin-bottom:var(--space-3);"><circle cx="8" cy="8" r="7"/><path d="M8 5v3M8 11.5v.5" stroke-linecap="round"/></svg>
+                  <p data-i18n="reader.chatHint1">Select text in the paper to trigger AI analysis</p>
+                  <p style="font-size:var(--text-xs); margin-top:var(--space-1);" data-i18n="reader.chatHint2">Or type a question to start chatting</p>
+                </div>
+              </div>
+              <div class="ai-chat-input-area" style="display:flex; gap:var(--space-2); padding:var(--space-3); border-top:1px solid var(--color-border-subtle);">
+                <textarea id="aiChatInput" placeholder="Type a question..." rows="1" style="flex:1; resize:none; background:var(--color-bg-base); border:1px solid var(--color-border-default); border-radius:var(--radius-md); padding:var(--space-2) var(--space-3); font-family:var(--font-sans); font-size:var(--text-sm); color:var(--color-text-primary); outline:none;"></textarea>
+                <button class="btn btn-accent btn-sm" id="aiChatSend" style="flex-shrink:0;" data-i18n="reader.send">Send</button>
+              </div>
+            </div>
+            <div class="ai-loading" id="aiLoading" style="display:none; align-items:center; gap:var(--space-2); padding:var(--space-2) var(--space-3); font-size:var(--text-xs); color:var(--color-text-tertiary);">
+              <div class="loading-spinner" style="width:14px;height:14px;border:2px solid var(--color-border-default);border-top-color:var(--color-accent);border-radius:50%;animation:spin 0.6s linear infinite;"></div>
+              <span data-i18n="reader.thinking">AI is thinking...</span>
+            </div>
+            <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+          </div>
+
+          <!-- Imported Explanation Document -->
+          <div id="readerImportedExplanation" style="display:none; flex:1; min-height:0; overflow-y:auto; padding:var(--space-4); font-size:var(--text-sm); line-height:var(--leading-relaxed); color:var(--color-text-secondary);">
+            <div class="empty-state" style="padding:var(--space-8) var(--space-4);">
+              <svg class="empty-state-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h10M3 5v8a1 1 0 001 1h8a1 1 0 001-1V5M3 5l1.5-3h7L13 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <p class="empty-state-title" data-i18n="reader.importExplainTitle">Import Explanation Document</p>
+              <p class="empty-state-desc" data-i18n="reader.importExplainDesc">Click "Import Explanation" above to load companion notes.</p>
+            </div>
+          </div>
         </div>
       </div>
+
     </div>
 
+    <!-- Keyboard hints -->
+    <div id="readerKeyHint" style="text-align:center; padding:var(--space-2); font-size:var(--text-xs); color:var(--color-text-tertiary); border-top:1px solid var(--color-border-subtle); flex-shrink:0; background:var(--color-bg-base);">
+      <kbd style="display:inline-block; padding:1px 6px; background:var(--color-bg-elevated); border:1px solid var(--color-border-default); border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:var(--text-xs); margin:0 2px;">Tab</kbd>
+      <span data-i18n="reader.keyHint1">Switch focus</span> &middot;
+      <kbd style="display:inline-block; padding:1px 6px; background:var(--color-bg-elevated); border:1px solid var(--color-border-default); border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:var(--text-xs); margin:0 2px;">Esc</kbd>
+      <span data-i18n="reader.keyHint2">Exit annotation mode</span> &middot;
+      <span data-i18n="reader.keyHint3">Select text for AI</span>
+    </div>
   </div>
-
-  <!-- ==================== KEYBOARD HINT ==================== -->
-  <div id="readerKeyHint" style="display:none; text-align:center; padding:var(--space-3) 0 0; font-size:var(--text-xs); color:var(--color-text-tertiary); border-top:1px solid var(--color-border-subtle); margin-top:var(--space-4);">
-    <kbd style="display:inline-block; padding:1px 6px; background:var(--color-bg-elevated); border:1px solid var(--color-border-default); border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:var(--text-xs); margin:0 2px;">Tab</kbd>
-    切换左右面板 &middot;
-    <kbd style="display:inline-block; padding:1px 6px; background:var(--color-bg-elevated); border:1px solid var(--color-border-default); border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:var(--text-xs); margin:0 2px;">Esc</kbd>
-    退出标注模式 &middot;
-    选中文本即可触发 AI 解析
-  </div>
-
 </div>

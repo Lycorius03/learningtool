@@ -3,8 +3,11 @@ const { generateWithAI } = require('./ai-provider');
 /**
  * Dual-channel AI output verification.
  * Channel 2 reviews Channel 1's output for factual accuracy, logic, and format.
+ * @param {string} content — AI-generated content to review
+ * @param {string} originalPrompt — the prompt that produced the content
+ * @param {object} [providerConfig] — optional provider config; falls back to env DEEPSEEK_API_KEY
  */
-async function verifyOutput(content, originalPrompt) {
+async function verifyOutput(content, originalPrompt, providerConfig) {
   const reviewPrompt = `你是一个严格的审阅者。请检查以下AI生成的内容是否存在问题。
 
 ## 原始请求
@@ -29,14 +32,15 @@ ${content}
 只输出JSON，不要其他内容。`;
 
   try {
-    const result = await generateWithAI(reviewPrompt, null, 'deepseek-v4-flash');
+    const config = providerConfig || 'deepseek-v4-flash'; // legacy string fallback → ai-provider maps it
+    const result = await generateWithAI(reviewPrompt, null, config);
     // Parse the JSON response
     const cleaned = result.content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     return JSON.parse(cleaned);
   } catch (e) {
-    console.warn('Verification failed, defaulting to pass:', e.message);
-    // If verification itself fails, default to pass with a warning
-    return { pass: true, issues: [], warning: 'Verification service error — output returned without review' };
+    console.error('Verification failed:', e.message);
+    // Verification service is unavailable — caller should treat content as unverified
+    return { pass: false, issues: ['Verification service unavailable'], warning: '输出已返回但未经审阅——验证服务异常' };
   }
 }
 

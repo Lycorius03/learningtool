@@ -1,101 +1,77 @@
 <div class="page-content-inner" style="max-width:var(--content-max-width); margin:0 auto;">
   <button class="back-btn" onclick="window.__lt?.router?.navigate('quiz')">&larr; Quiz</button>
 
-  <!-- ==================== MODE BADGE + COUNTER ==================== -->
-  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-4);">
-    <span class="badge badge-accent" id="quizSessionMode">加权乱序</span>
-    <span style="font-size:var(--text-sm); color:var(--color-text-secondary);" id="quizSessionCounter">第 1/20 题</span>
+  <!-- Top bar: mode + counter + actions -->
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--space-3); margin-bottom:var(--space-4);">
+    <span class="badge badge-accent" id="quizSessionMode">Weighted</span>
+    <span style="font-size:var(--text-sm); color:var(--color-text-secondary);" id="quizSessionCounter">Q 1/20</span>
+    <div style="display:flex; gap:var(--space-2);">
+      <button class="btn btn-ghost btn-sm" id="quizRedoBtn" title="Redo quiz">Redo</button>
+      <button class="btn btn-ghost btn-sm" id="quizResetBtn" title="Reset all progress for this set" style="color:var(--color-error);">Reset Data</button>
+    </div>
   </div>
 
-  <!-- ==================== PROGRESS BAR ==================== -->
-  <div class="progress-bar" style="margin-bottom:var(--space-8);">
+  <!-- Progress bar -->
+  <div class="progress-bar" style="margin-bottom:var(--space-6);">
     <div class="progress-bar-fill" id="quizSessionProgress" style="width:5%;"></div>
   </div>
 
-  <!-- ==================== QUESTION DISPLAY ==================== -->
-  <div id="quizQuestionArea" class="anim-fade-in-up">
-    <!-- Question text -->
-    <div style="margin-bottom:var(--space-6);">
-      <h2 style="font-size:var(--text-xl); font-weight:var(--weight-semibold); color:var(--color-text-primary); line-height:var(--leading-snug);" id="quizQuestionText">
-        题目加载中...
-      </h2>
-    </div>
-
-    <!-- Options -->
-    <div style="display:flex; flex-direction:column; gap:var(--space-3); margin-bottom:var(--space-6);" id="quizOptionsList">
-      <div class="quiz-option" data-index="0" id="quizOption0">
-        <span class="quiz-option-marker">A</span>
-        <span>选项 A</span>
-      </div>
-      <div class="quiz-option" data-index="1" id="quizOption1">
-        <span class="quiz-option-marker">B</span>
-        <span>选项 B</span>
-      </div>
-      <div class="quiz-option" data-index="2" id="quizOption2">
-        <span class="quiz-option-marker">C</span>
-        <span>选项 C</span>
-      </div>
-      <div class="quiz-option" data-index="3" id="quizOption3">
-        <span class="quiz-option-marker">D</span>
-        <span>选项 D</span>
-      </div>
-    </div>
+  <!-- Navigation bar -->
+  <div style="display:flex; align-items:center; justify-content:center; gap:var(--space-2); margin-bottom:var(--space-6);">
+    <button class="btn btn-ghost btn-sm" id="quizPrevBtn" title="Previous question (view only)">&larr; Prev</button>
+    <span style="font-size:var(--text-xs); color:var(--color-text-tertiary);">Jump to</span>
+    <input class="form-input" type="number" id="quizJumpInput" min="1" max="20" value="1" style="width:52px; height:28px; text-align:center; padding:0 var(--space-1); font-size:var(--text-xs);" />
+    <button class="btn btn-ghost btn-sm" id="quizJumpBtn">Go</button>
+    <button class="btn btn-ghost btn-sm" id="quizNextBtn" title="Next question">Next &rarr;</button>
   </div>
 
-  <!-- ==================== RESULT FEEDBACK ==================== -->
+  <!-- Question display -->
+  <div id="quizQuestionArea" class="anim-fade-in-up">
+    <div style="margin-bottom:var(--space-6);">
+      <h2 style="font-size:var(--text-xl); font-weight:var(--weight-semibold); color:var(--color-text-primary); line-height:var(--leading-snug);" id="quizQuestionText">Loading...</h2>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:var(--space-3); margin-bottom:var(--space-4);" id="quizOptionsList">
+      <div class="quiz-option" data-option="0" id="quizOption0"><span class="quiz-option-marker">A</span><span>A</span></div>
+      <div class="quiz-option" data-option="1" id="quizOption1"><span class="quiz-option-marker">B</span><span>B</span></div>
+      <div class="quiz-option" data-option="2" id="quizOption2"><span class="quiz-option-marker">C</span><span>C</span></div>
+      <div class="quiz-option" data-option="3" id="quizOption3"><span class="quiz-option-marker">D</span><span>D</span></div>
+    </div>
+
+    <!-- Answer status for reviewed questions -->
+    <div id="quizReviewBanner" style="display:none; padding:var(--space-3); border-radius:var(--radius-md); margin-bottom:var(--space-4); font-size:var(--text-sm); text-align:center;"></div>
+  </div>
+
+  <!-- Result feedback -->
   <div id="quizResultArea" style="display:none;" class="anim-fade-in-up">
-    <!-- Correct feedback -->
-    <div id="quizResultCorrect" style="display:none; padding:var(--space-4); background:var(--color-success-bg); border:1px solid var(--color-success); border-radius:var(--radius-lg); margin-bottom:var(--space-4);">
-      <div style="display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-2);">
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--color-success)" stroke-width="2"><path d="M3 8l3.5 3.5L13 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span style="font-size:var(--text-md); font-weight:var(--weight-semibold); color:var(--color-success);">回答正确</span>
-      </div>
+    <div id="quizResultCorrect" style="display:none; padding:var(--space-4); background:var(--color-success-bg); border:1px solid var(--color-success); border-radius:var(--radius-lg); margin-bottom:var(--space-3);">
+      <div style="display:flex; align-items:center; gap:var(--space-2);"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--color-success)" stroke-width="2"><path d="M3 8l3.5 3.5L13 5" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="font-size:var(--text-md); font-weight:var(--weight-semibold); color:var(--color-success);">Correct</span></div>
     </div>
-
-    <!-- Incorrect feedback -->
-    <div id="quizResultIncorrect" style="display:none; padding:var(--space-4); background:var(--color-error-bg); border:1px solid var(--color-error); border-radius:var(--radius-lg); margin-bottom:var(--space-4);">
-      <div style="display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-2);">
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--color-error)" stroke-width="2"><path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/></svg>
-        <span style="font-size:var(--text-md); font-weight:var(--weight-semibold); color:var(--color-error);">回答错误</span>
-      </div>
-      <div style="font-size:var(--text-sm); color:var(--color-text-secondary);" id="quizCorrectAnswerLabel">
-        正确答案: -
-      </div>
+    <div id="quizResultIncorrect" style="display:none; padding:var(--space-4); background:var(--color-error-bg); border:1px solid var(--color-error); border-radius:var(--radius-lg); margin-bottom:var(--space-3);">
+      <div style="display:flex; align-items:center; gap:var(--space-2);"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--color-error)" stroke-width="2"><path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/></svg><span style="font-size:var(--text-md); font-weight:var(--weight-semibold); color:var(--color-error);">Incorrect</span></div>
+      <div style="font-size:var(--text-sm); color:var(--color-text-secondary); margin-top:var(--space-2);" id="quizCorrectAnswerLabel">Correct answer: -</div>
     </div>
-
-    <!-- Explanation -->
-    <div id="quizExplanation" style="display:none; padding:var(--space-4); background:var(--color-bg-surface); border:1px solid var(--color-border-subtle); border-radius:var(--radius-lg); margin-bottom:var(--space-5);">
-      <p style="font-size:var(--text-xs); font-weight:var(--weight-medium); color:var(--color-text-tertiary); margin-bottom:var(--space-2); text-transform:uppercase; letter-spacing:0.06em;">解析</p>
+    <div id="quizExplanation" style="display:none; padding:var(--space-4); background:var(--color-bg-surface); border:1px solid var(--color-border-subtle); border-radius:var(--radius-lg); margin-bottom:var(--space-4);">
+      <p style="font-size:var(--text-xs); font-weight:var(--weight-medium); color:var(--color-text-tertiary); margin-bottom:var(--space-2); text-transform:uppercase; letter-spacing:0.06em;">Explanation</p>
       <p style="font-size:var(--text-sm); color:var(--color-text-secondary); line-height:var(--leading-normal);" id="quizExplanationText">-</p>
     </div>
   </div>
 
-  <!-- ==================== NEXT BUTTON ==================== -->
-  <div style="text-align:center; padding:var(--space-4) 0;">
-    <button class="btn btn-accent btn-lg" id="quizNextBtn" style="display:none; padding:0 var(--space-10);" disabled>
-      下一题
-      <svg style="width:15px; height:15px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <p id="quizSessionEndMsg" style="display:none; font-size:var(--text-sm); color:var(--color-text-tertiary);">本轮刷题已结束，即将返回...</p>
+  <!-- Skip button (only when answering) -->
+  <div style="text-align:center; padding:var(--space-3) 0;" id="quizSkipArea">
+    <button class="btn btn-ghost btn-sm" id="quizSkipBtn">Skip (counts as unanswered)</button>
   </div>
 
-  <!-- ==================== SESSION STATS (shown at end) ==================== -->
+  <!-- Session stats (shown at end) -->
   <div id="quizSessionStats" style="display:none; padding:var(--space-6); background:var(--color-bg-surface); border-radius:var(--radius-lg); text-align:center;">
-    <h3 style="font-size:var(--text-lg); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-4);">本轮成绩</h3>
-    <div style="display:flex; justify-content:center; gap:var(--space-8);">
-      <div>
-        <span style="font-size:var(--text-2xl); font-weight:var(--weight-semibold); color:var(--color-success);" id="quizStatCorrect">0</span>
-        <p style="font-size:var(--text-xs); color:var(--color-text-tertiary);">正确</p>
-      </div>
-      <div>
-        <span style="font-size:var(--text-2xl); font-weight:var(--weight-semibold); color:var(--color-error);" id="quizStatIncorrect">0</span>
-        <p style="font-size:var(--text-xs); color:var(--color-text-tertiary);">错误</p>
-      </div>
-      <div>
-        <span style="font-size:var(--text-2xl); font-weight:var(--weight-semibold); color:var(--color-accent);" id="quizStatAccuracy">0%</span>
-        <p style="font-size:var(--text-xs); color:var(--color-text-tertiary);">正确率</p>
-      </div>
+    <h3 style="font-size:var(--text-lg); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-4);">Results</h3>
+    <div style="display:flex; justify-content:center; gap:var(--space-8); flex-wrap:wrap;">
+      <div><span style="font-size:var(--text-2xl); font-weight:var(--weight-semibold); color:var(--color-success);" id="quizStatCorrect">0</span><p style="font-size:var(--text-xs); color:var(--color-text-tertiary);">Correct</p></div>
+      <div><span style="font-size:var(--text-2xl); font-weight:var(--weight-semibold); color:var(--color-error);" id="quizStatIncorrect">0</span><p style="font-size:var(--text-xs); color:var(--color-text-tertiary);">Incorrect</p></div>
+      <div><span style="font-size:var(--text-2xl); font-weight:var(--weight-semibold); color:var(--color-text-tertiary);" id="quizStatSkipped">0</span><p style="font-size:var(--text-xs); color:var(--color-text-tertiary);">Skipped</p></div>
+      <div><span style="font-size:var(--text-2xl); font-weight:var(--weight-semibold); color:var(--color-accent);" id="quizStatAccuracy">0%</span><p style="font-size:var(--text-xs); color:var(--color-text-tertiary);">Accuracy</p></div>
     </div>
   </div>
 
+  <p id="quizSessionEndMsg" style="display:none; text-align:center; font-size:var(--text-sm); color:var(--color-text-tertiary); padding:var(--space-4) 0;">Session complete — returning to quiz page...</p>
 </div>

@@ -1,42 +1,48 @@
 /* ============================================================
-   PaperLens Design Tokens — Claude Aesthetic
-   参考 claude-aesthetic-template.html 设计令牌系统
+   LearningTool Design Tokens
+   Light: Vellum manuscript · Aged gold · Venetian crimson
+   Dark:  Deep tech · Same structure, cooler tones
    ============================================================ */
 :root {
-  /* --- COLOR PALETTE (暖色调) --- */
-  --color-bg-base:        #FAF9F6;
-  --color-bg-surface:     #F5F3EF;
-  --color-bg-elevated:    #EDEAE3;
-  --color-bg-sunken:      #E8E4DC;
+  /* === LIGHT: Classical manuscript === */
+  --color-bg-base:        #FDFBF7;   /* brightest vellum */
+  --color-bg-surface:     #F4EFE6;   /* aged paper */
+  --color-bg-elevated:    #EBE4D8;   /* warm parchment */
+  --color-bg-sunken:      #E1D8CA;   /* inset depth */
   --color-bg-white:       #FFFFFF;
 
-  --color-border-subtle:  #E8E4DC;
-  --color-border-default: #D9D5CC;
-  --color-border-strong:  #C4BFB5;
+  --color-border-subtle:  rgba(140,115,85,0.15);
+  --color-border-default: rgba(140,115,85,0.25);
+  --color-border-strong:  rgba(140,115,85,0.45);
 
-  --color-text-primary:   #1A1816;
-  --color-text-secondary: #5C5751;
-  --color-text-tertiary:  #9C9690;
-  --color-text-disabled:  #C4BFB5;
+  --color-text-primary:   #2B231D;   /* oak-gall ink */
+  --color-text-secondary: #5E5042;   /* sepia */
+  --color-text-tertiary:  #8A7A68;   /* faded ink */
+  --color-text-disabled:  #B8AA96;
 
-  --color-accent:         #D97757;
-  --color-accent-soft:    #F0D5C8;
-  --color-accent-hover:   #C4643E;
-  --color-accent-subtle:  rgba(217, 119, 87, 0.08);
+  --color-accent:         #A88133;   /* aged gold */
+  --color-accent-soft:    rgba(168,129,51,0.15);
+  --color-accent-hover:   #8C6A2A;
+  --color-accent-subtle:  rgba(168,129,51,0.07);
 
-  --color-success:        #5A8A6A;
-  --color-success-bg:     #EBF4EE;
-  --color-warning:        #B07D3A;
-  --color-warning-bg:     #FDF3E3;
-  --color-error:          #A64040;
-  --color-error-bg:       #FAEAEA;
-  --color-info:           #3D6B8A;
-  --color-info-bg:        #E8F0F6;
+  --color-success:        #3E6B4D;   /* verdigris */
+  --color-success-bg:     rgba(62,107,77,0.10);
+  --color-warning:        #C27A27;   /* amber */
+  --color-warning-bg:     rgba(194,122,39,0.10);
+  --color-error:          #8C2A3A;   /* Venetian crimson */
+  --color-error-bg:       rgba(140,42,58,0.08);
+  --color-info:           #5C7A8A;   /* muted blue */
+  --color-info-bg:        rgba(92,122,138,0.10);
+
+  /* ambient */
+  --orb-a: rgba(168,129,51,0.07);
+  --orb-b: rgba(133,88,40,0.05);
+  --orb-c: rgba(140,42,58,0.04);
+  --grid-color: rgba(140,115,85,0.08);
 
   /* --- TYPOGRAPHY --- */
   --font-sans:    'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-serif:   'Playfair Display', 'Noto Serif SC', Georgia, serif;
-  --font-chinese: 'Noto Serif SC', 'STSong', 'SimSun', serif;
   --font-mono:    'DM Mono', 'Fira Code', monospace;
 
   --text-xs:    0.75rem;
@@ -58,46 +64,223 @@
   --weight-medium:  500;
   --weight-semibold: 600;
 
-  /* --- SPACING (4px base) --- */
-  --space-1:   4px;
-  --space-2:   8px;
-  --space-3:   12px;
-  --space-4:   16px;
-  --space-5:   20px;
-  --space-6:   24px;
-  --space-8:   32px;
-  --space-10:  40px;
-  --space-12:  48px;
-  --space-16:  64px;
+  /* --- SPACING --- */
+  --space-1:4px;  --space-2:8px;   --space-3:12px;  --space-4:16px;
+  --space-5:20px; --space-6:24px;  --space-8:32px;  --space-10:40px;
+  --space-12:48px;--space-16:64px;
 
   /* --- RADII --- */
-  --radius-sm:   6px;
-  --radius-md:   10px;
-  --radius-lg:   14px;
-  --radius-xl:   18px;
-  --radius-full: 9999px;
+  --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-xl:16px;
+  --radius-full:9999px;
 
-  /* --- SHADOWS (暖色调) --- */
-  --shadow-xs:  0 1px 2px rgba(26,24,22,0.06);
-  --shadow-sm:  0 1px 4px rgba(26,24,22,0.08), 0 1px 2px rgba(26,24,22,0.04);
-  --shadow-md:  0 4px 12px rgba(26,24,22,0.08), 0 2px 4px rgba(26,24,22,0.04);
-  --shadow-lg:  0 8px 24px rgba(26,24,22,0.10), 0 3px 8px rgba(26,24,22,0.06);
-  --shadow-xl:  0 16px 40px rgba(26,24,22,0.12), 0 6px 16px rgba(26,24,22,0.08);
+  /* --- SHADOWS (sepia-tinted) --- */
+  --shadow-xs:  0 1px 2px rgba(43,35,29,0.05);
+  --shadow-sm:  0 1px 4px rgba(43,35,29,0.07), 0 1px 2px rgba(43,35,29,0.04);
+  --shadow-md:  0 4px 12px rgba(43,35,29,0.07), 0 2px 4px rgba(43,35,29,0.04);
+  --shadow-lg:  0 8px 24px rgba(43,35,29,0.09), 0 3px 8px rgba(43,35,29,0.05);
+  --shadow-xl:  0 16px 40px rgba(43,35,29,0.11), 0 6px 16px rgba(43,35,29,0.06);
 
-  /* --- TRANSITIONS --- */
-  --ease-default: cubic-bezier(0.19, 1, 0.22, 1);
+  /* --- EASING --- */
+  --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-exit:   cubic-bezier(0.4, 0, 1, 1);
+  --ease-enter:  cubic-bezier(0, 0, 0.2, 1);
+  --ease-smooth: cubic-bezier(0.25, 0, 0, 1);
+  --ease-default: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in:      cubic-bezier(0.4, 0, 1, 1);
   --ease-out:     cubic-bezier(0, 0, 0.2, 1);
-  --ease-inout:   cubic-bezier(0.4, 0, 0.2, 1);
 
-  --duration-fast:   120ms;
-  --duration-base:   200ms;
-  --duration-slow:   300ms;
-  --duration-slower: 500ms;
+  --duration-instant:80ms; --duration-fast:150ms; --duration-base:250ms;
+  --duration-slow:400ms;  --duration-scene:600ms; --duration-epic:900ms;
 
   /* --- LAYOUT --- */
-  --sidebar-width: 260px;
-  --topbar-height: 52px;
-  --content-max-width: 780px;
-  --input-max-width: 720px;
+  --content-max-width:780px;
+  --input-max-width:720px;
+}
+
+/* ============================================================
+   DARK THEME — same structure as light, slightly tech-inflected
+   ============================================================ */
+:root.dark {
+  --color-bg-base:        #06060A;
+  --color-bg-surface:     #0E0D15;
+  --color-bg-elevated:    #161420;
+  --color-bg-sunken:      #0A0910;
+  --color-bg-white:       #12101A;
+
+  --color-border-subtle:  rgba(255,255,255,0.05);
+  --color-border-default: rgba(255,255,255,0.10);
+  --color-border-strong:  rgba(255,255,255,0.16);
+
+  --color-text-primary:   #EEEAF5;
+  --color-text-secondary: #8A8698;
+  --color-text-tertiary:  #524E62;
+  --color-text-disabled:  #3A3648;
+
+  --color-accent:         #5B7FFF;
+  --color-accent-soft:    rgba(91,127,255,0.14);
+  --color-accent-hover:   #7B9FFF;
+  --color-accent-subtle:  rgba(91,127,255,0.07);
+
+  --color-success:        #34C77B;
+  --color-success-bg:     rgba(52,199,123,0.10);
+  --color-warning:        #FFB340;
+  --color-warning-bg:     rgba(255,179,64,0.10);
+  --color-error:          #FF6058;
+  --color-error-bg:       rgba(255,96,88,0.08);
+  --color-info:           #5B7FFF;
+  --color-info-bg:        rgba(91,127,255,0.10);
+
+  --orb-a: rgba(91,127,255,0.05);
+  --orb-b: rgba(192,125,255,0.04);
+  --orb-c: rgba(255,96,88,0.03);
+  --grid-color: rgba(255,255,255,0.025);
+
+  --shadow-xs:  0 1px 2px rgba(0,0,0,0.30);
+  --shadow-sm:  0 1px 4px rgba(0,0,0,0.40), 0 1px 2px rgba(0,0,0,0.20);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.50), 0 2px 4px rgba(0,0,0,0.20);
+  --shadow-lg:  0 8px 24px rgba(0,0,0,0.55), 0 3px 8px rgba(0,0,0,0.25);
+  --shadow-xl:  0 16px 40px rgba(0,0,0,0.60), 0 6px 16px rgba(0,0,0,0.30);
+}
+
+/* Theme transition — disabled, FX layer handles it via opacity trick */
+html.theme-transition,
+html.theme-transition * { transition: none !important; }
+
+/* ============================================================
+   FX LAYER — exact replica of celestial motion reference
+   ============================================================ */
+#fx-layer {
+  position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+  display: none;
+}
+/* --- Dark→Light: tear + beam --- */
+.tear-bg {
+  position: absolute; inset: 0;
+  background: #FDFBF7;
+  clip-path: polygon(120% -20%, 120% -20%, 120% 120%, 120% 120%);
+}
+.light-beam {
+  position: absolute; top: -20vh; bottom: -20vh; width: 4px;
+  background: #FFFFFF;
+  box-shadow: 0 0 20px 4px rgba(255,255,255,0.8),
+              0 0 60px 15px rgba(255,240,200,0.5),
+              0 0 120px 30px rgba(255,240,200,0.3);
+  right: -10vw; transform: rotate(15deg); opacity: 0; filter: blur(1px);
+}
+@keyframes tearReveal {
+  0%   { clip-path: polygon(120% -20%, 120% -20%, 100% 120%, 100% 120%); }
+  100% { clip-path: polygon(-20% -20%, 120% -20%, 120% 120%, -40% 120%); }
+}
+@keyframes beamSweep {
+  0%   { right: -20vw; opacity: 0; }
+  10%  { opacity: 1; }
+  80%  { opacity: 1; right: 110vw; }
+  100% { right: 120vw; opacity: 0; }
+}
+/* --- Light→Dark: nightfall + meteors --- */
+.nightfall-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 80% 20%, #151522 0%, #0A0A0E 80%);
+  opacity: 0;
+}
+@keyframes nightFadesIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+.meteor {
+  position: absolute; width: 150px; height: 2px;
+  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 80%, rgba(255,255,255,1) 100%);
+  border-radius: 2px;
+  box-shadow: 2px 0 10px 2px rgba(220,230,255,0.6);
+  transform: rotate(-45deg) translateX(0); opacity: 0;
+}
+@keyframes meteorStrike {
+  0%   { transform: rotate(-45deg) translateX(0); opacity: 0; }
+  10%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { transform: rotate(-45deg) translateX(-150vw); opacity: 0; }
+}
+
+/* --- Dark mode ambient: rotating celestial arc --- */
+:root.dark .bg-grid {
+  animation: celestialDrift 90s linear infinite;
+}
+:root.dark .ambient-orbs {
+  animation: celestialPulse 8s ease-in-out infinite;
+}
+@keyframes celestialDrift {
+  from { opacity: 0.35; transform: scale(1); }
+  50%  { opacity: 0.55; transform: scale(1.05); }
+  to   { opacity: 0.35; transform: scale(1); }
+}
+@keyframes celestialPulse {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+/* Rotating gradient arc for dark mode — tech celestial */
+.dark-arc {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    conic-gradient(from 0deg at 120% 70%, transparent 55%, rgba(91,127,255,0.06) 65%, rgba(192,125,255,0.09) 72%, rgba(91,127,255,0.04) 80%, transparent 90%),
+    conic-gradient(from 180deg at 20% 30%, transparent 60%, rgba(52,199,123,0.04) 70%, rgba(91,127,255,0.06) 78%, transparent 92%);
+  opacity: 0; transition: opacity 2.5s;
+}
+:root.dark .dark-arc { opacity: 1; animation: arcRotate 50s linear infinite; }
+@keyframes arcRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Dark mode particle dots */
+.dark-particles {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0; transition: opacity 2s;
+}
+:root.dark .dark-particles { opacity: 1; }
+.dark-particle {
+  position: absolute; width: 2px; height: 2px; border-radius: 50%;
+  background: rgba(91,127,255,0.5);
+  animation: particleFloat 6s ease-in-out infinite;
+}
+.dark-particle:nth-child(odd) { background: rgba(192,125,255,0.4); animation-duration: 8s; }
+.dark-particle:nth-child(3n) { background: rgba(52,199,123,0.35); animation-duration: 10s; }
+@keyframes particleFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+  25%      { transform: translate(8px, -12px) scale(1.8); opacity: 0.9; }
+  50%      { transform: translate(-4px, -24px) scale(0.6); opacity: 0.2; }
+  75%      { transform: translate(-12px, -8px) scale(1.5); opacity: 0.7; }
+}
+
+/* ============================================================
+   DECORATIVE
+   ============================================================ */
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
+  will-change: opacity, transform;
+}
+.ambient-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.orb { position: absolute; border-radius: 50%; filter: blur(100px); will-change: transform; }
+.orb-a { width:600px;height:600px; background:var(--orb-a); top:-120px; left:-120px; will-change: transform; }
+.orb-b { width:450px;height:450px; background:var(--orb-b); bottom:-80px; right:-80px; will-change: transform; }
+.orb-c { width:320px;height:320px; background:var(--orb-c); top:55%; left:55%; transform:translate(-50%,-50%); will-change: transform; }
+
+.badge-pulse {
+  width:6px; height:6px; border-radius:50%; background:var(--color-accent);
+  display:inline-block; animation:pulse-glow 2s ease-in-out infinite;
+}
+@keyframes pulse-glow {
+  0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(168,129,51,0.35); }
+  50%     { opacity:0.5; box-shadow:0 0 0 6px transparent; }
+}
+:root.dark .badge-pulse {
+  animation-name: pulse-glow-dark;
+}
+@keyframes pulse-glow-dark {
+  0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(91,127,255,0.28); }
+  50%     { opacity:0.5; box-shadow:0 0 0 6px transparent; }
 }

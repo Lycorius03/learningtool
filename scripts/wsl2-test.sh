@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
-echo "PaperLens WSL2 Test Suite"
-echo "========================"
+echo "LearningTool WSL2 Test Suite"
+echo "============================"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR/.."
 echo "[1/4] Installing dependencies..."

@@ -13,7 +13,7 @@ export class Router {
 
   start() {
     window.addEventListener('hashchange', () => this._handleRoute());
-    if (!window.location.hash) window.location.hash = '#/home';
+    if (!window.location.hash) window.location.hash = '#/start';
     else this._handleRoute();
   }
 

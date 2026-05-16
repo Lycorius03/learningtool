@@ -3,9 +3,9 @@
 
   <!-- ==================== PAGE HEADER ==================== -->
   <section class="anim-fade-in-up" style="margin-bottom:var(--space-8);">
-    <h1 style="font-size:var(--text-2xl); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-2);">题库 JSON 模板</h1>
+    <h1 style="font-size:var(--text-2xl); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-2);">Quiz JSON Template</h1>
     <p style="font-size:var(--text-sm); color:var(--color-text-secondary); line-height:var(--leading-relaxed);">
-      按照以下 JSON 格式准备题库文件，即可导入 PaperLens 进行刷题。每道题包含题目、四个选项、正确答案索引及解析。
+<span data-i18n="template.desc">Prepare quiz files in the following JSON format. Each question includes the question text, four options, correct answer index, and explanation.</span>
     </p>
   </section>
 
@@ -16,9 +16,9 @@
         <path d="M14 10v2.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 12.5V10"/>
         <path d="M8 2v8M4.5 5.5L8 2l3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      下载模板 (template.json)
+      <span data-i18n="template.download">Download Template (template.json)</span>
     </button>
-    <span style="font-size:var(--text-xs); color:var(--color-text-tertiary);">或复制下方 JSON 自行粘贴</span>
+    <span style="font-size:var(--text-xs); color:var(--color-text-tertiary);"><span data-i18n="template.orCopy">Or copy the JSON below</span></span>
   </div>
 
   <!-- ==================== CODE BLOCK ==================== -->
@@ -29,7 +29,7 @@
         <svg style="width:14px; height:14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
           <rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke-linecap="round"/>
         </svg>
-        复制
+        <span data-i18n="template.copy">Copy</span>
       </button>
     </div>
     <pre><code>[
@@ -60,22 +60,22 @@
 ]</code></pre>
   </div>
   <p style="margin-top:var(--space-3); font-size:var(--text-xs); color:var(--color-text-tertiary); text-align:right;">
-    可包含多个题目对象，数组长度即题库总数
+    <span data-i18n="template.arrayNote">Multiple question objects allowed — array length = total questions</span>
   </p>
 
   <div class="divider"></div>
 
   <!-- ==================== FIELD DESCRIPTIONS TABLE ==================== -->
   <section style="margin-bottom:var(--space-8);">
-    <h2 style="font-size:var(--text-lg); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-4);">字段说明</h2>
+    <h2 style="font-size:var(--text-lg); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-4);" data-i18n="template.fields">Field Descriptions</h2>
 
     <table style="width:100%; border-collapse:collapse; font-size:var(--text-sm);">
       <thead>
         <tr style="border-bottom:2px solid var(--color-border-subtle); text-align:left;">
-          <th style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary); font-weight:var(--weight-semibold); width:120px;">字段</th>
-          <th style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary); font-weight:var(--weight-semibold); width:100px;">类型</th>
-          <th style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary); font-weight:var(--weight-semibold); width:90px;">必填</th>
-          <th style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary); font-weight:var(--weight-semibold);">说明</th>
+          <th style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary); font-weight:var(--weight-semibold); width:120px;" data-i18n="template.field">Field</th>
+          <th style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary); font-weight:var(--weight-semibold); width:100px;" data-i18n="template.type">Type</th>
+          <th style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary); font-weight:var(--weight-semibold); width:90px;" data-i18n="template.required">Required</th>
+          <th style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary); font-weight:var(--weight-semibold);" data-i18n="template.description">Description</th>
         </tr>
       </thead>
       <tbody>
@@ -85,7 +85,7 @@
           </td>
           <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);">number</td>
           <td style="padding:var(--space-3) var(--space-4);"><span class="badge badge-accent">是</span></td>
-          <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);">题目唯一编号，不可重复</td>
+          <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);"><span data-i18n="template.idDesc">Unique question ID, no duplicates</span></td>
         </tr>
         <tr style="border-bottom:1px solid var(--color-border-subtle);">
           <td style="padding:var(--space-3) var(--space-4);">
@@ -93,7 +93,7 @@
           </td>
           <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);">string</td>
           <td style="padding:var(--space-3) var(--space-4);"><span class="badge badge-accent">是</span></td>
-          <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);">题目内容，支持纯文本</td>
+          <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);"><span data-i18n="template.qDesc">Question text, plain text</span></td>
         </tr>
         <tr style="border-bottom:1px solid var(--color-border-subtle);">
           <td style="padding:var(--space-3) var(--space-4);">
@@ -101,7 +101,7 @@
           </td>
           <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);">string[]</td>
           <td style="padding:var(--space-3) var(--space-4);"><span class="badge badge-accent">是</span></td>
-          <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);">4 个选项的字符串数组，建议以 A. B. C. D. 开头</td>
+          <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);"><span data-i18n="template.optDesc">Array of 4 option strings, suggest A. B. C. D. prefix</span></td>
         </tr>
         <tr style="border-bottom:1px solid var(--color-border-subtle);">
           <td style="padding:var(--space-3) var(--space-4);">
@@ -109,7 +109,7 @@
           </td>
           <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);">number</td>
           <td style="padding:var(--space-3) var(--space-4);"><span class="badge badge-accent">是</span></td>
-          <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);">正确答案的索引 (0=A, 1=B, 2=C, 3=D)</td>
+          <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);"><span data-i18n="template.ansDesc">Correct answer index (0=A, 1=B, 2=C, 3=D)</span></td>
         </tr>
         <tr>
           <td style="padding:var(--space-3) var(--space-4);">
@@ -117,7 +117,7 @@
           </td>
           <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);">string</td>
           <td style="padding:var(--space-3) var(--space-4);"><span class="badge badge-default">否</span></td>
-          <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);">答案解析，答错后展示。可为空字符串</td>
+          <td style="padding:var(--space-3) var(--space-4); color:var(--color-text-secondary);"><span data-i18n="template.expDesc">Answer explanation shown after wrong answer. Can be empty string.</span></td>
         </tr>
       </tbody>
     </table>
@@ -128,13 +128,46 @@
     <div style="display:flex; align-items:flex-start; gap:var(--space-2);">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--color-info)" stroke-width="1.5" style="flex-shrink:0; margin-top:1px;"><circle cx="8" cy="8" r="7"/><path d="M8 5v3M8 11.5v.5" stroke-linecap="round"/></svg>
       <div>
-        <p style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-info); margin-bottom:var(--space-1);">提示</p>
+        <p style="font-size:var(--text-sm); font-weight:var(--weight-medium); color:var(--color-info); margin-bottom:var(--space-1);"><span data-i18n="template.note">Note</span></p>
         <p style="font-size:var(--text-sm); color:var(--color-text-secondary); line-height:var(--leading-normal);">
-          PaperLens 也支持直接导入 Word (.docx)、Markdown (.md)、PDF 文件，系统会尝试自动解析其中的选择题。
-          但推荐使用 JSON 格式以确保解析准确性。
+          LearningTool  Word (.docx)、Markdown (.md)、PDF 文件，<span data-i18n="template.noteDesc">LearningTool supports direct import of Word (.docx), Markdown (.md), and PDF files — auto-parsing is attempted. JSON is recommended for accuracy.</span>。
+          。
         </p>
       </div>
     </div>
   </div>
 
 </div>
+
+<script>
+(function() {
+  var template = [
+    { id: 1, question: "以下哪个是 Python 中的可变数据类型？", options: ["A. int", "B. str", "C. list", "D. tuple"], answer: 2, explanation: "Python 中 list（列表）是可变的，可以修改其元素。int、str、tuple 都是不可变类型。" },
+    { id: 2, question: "TCP 三次握手中，第三次握手的作用是什么？", options: ["A. 确认双方收发能力正常", "B. 发送数据", "C. 关闭连接", "D. 重新传输"], answer: 0, explanation: "第三次握手（客户端发送 ACK）确认了服务端的发送能力和客户端的接收能力均正常，完成双向验证。" }
+  ];
+
+  document.getElementById('templateDownloadBtn')?.addEventListener('click', function() {
+    var blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'quiz-template.json';
+    a.click(); URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('templateCopyBtn')?.addEventListener('click', function() {
+    var text = JSON.stringify(template, null, 2);
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = document.getElementById('templateCopyBtn');
+      if (btn) { btn.textContent = '已复制'; setTimeout(function() { btn.textContent = '复制'; }, 2000); }
+    }).catch(function() {
+      // Fallback for non-HTTPS
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      var btn = document.getElementById('templateCopyBtn');
+      if (btn) { btn.textContent = '已复制'; setTimeout(function() { btn.textContent = '复制'; }, 2000); }
+    });
+  });
+})();
+</script>

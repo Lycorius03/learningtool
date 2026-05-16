@@ -63,7 +63,7 @@ export class AdminEntrance {
       showToast(err.message || '验证失败', 'error');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = '验证';
+      submitBtn.textContent = 'Sign In';
     }
   }
 }

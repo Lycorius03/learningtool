@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,8 +14,52 @@
 </head>
 <body>
 
+<!-- Scroll progress bar -->
+<div id="scrollProgressBar"></div>
+
+<!-- Ambient decoration -->
+<div class="bg-grid"></div>
+<div class="ambient-orbs">
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="orb orb-c"></div>
+</div>
+
+<!-- Noise overlay -->
 <div class="noise-overlay"></div>
+
+<!-- Custom cursor -->
 <div class="cursor-dot" id="cursorDot"></div>
+
+<!-- Language toggle — EN/CN sliding pill, top-left -->
+<button class="lang-toggle" id="langToggle" aria-label="Switch language" title="English / 中文">
+  <span class="lang-option" data-lang="en">EN</span>
+  <span class="lang-option" data-lang="cn">中文</span>
+  <span class="lang-pill"></span>
+</button>
+
+<!-- Cinematic FX layer for theme transitions -->
+<div id="fx-layer"></div>
+<!-- Dark mode rotating celestial arc -->
+<div class="dark-arc"></div>
+<!-- Dark mode floating particles -->
+<div class="dark-particles" id="darkParticles"></div>
+
+<!-- Theme toggle — sun/moon animated switch -->
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle light/dark theme">
+  <div class="theme-toggle-track">
+    <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+    <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+    </svg>
+  </div>
+</button>
 
 <main class="main">
   <div class="page-content" id="pageContent"></div>
@@ -23,6 +67,7 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- Admin modal -->
 <div class="modal-overlay" id="adminModal" style="display:none;">
   <div class="modal">
     <h3 class="modal-title">Sign In</h3>
@@ -41,6 +86,409 @@
   </div>
 </div>
 
-<script type="module" src="src/js/app.js"></script>
+<!-- Motion libraries — local copies, zero CDN dependency -->
+  <script src="src/lib/gsap.min.js"></script>
+  <script src="src/lib/ScrollTrigger.min.js"></script>
+  <script src="src/lib/three.min.js"></script>
+
+  <script type="module" src="src/js/app.js"></script>
+
+<!-- Shell logic: theme, language, parallax -->
+<script>
+(function() {
+  var html = document.documentElement;
+
+  // --- Theme Toggle (GSAP cinematic if available, simple fallback otherwise) ---
+  var themeToggleBtn = document.getElementById('themeToggle');
+  var isAnimating = false;
+  if (localStorage.getItem('paperlens_theme') === 'dark') html.classList.add('dark');
+
+  var hasGSAP = typeof gsap !== 'undefined';
+
+  if (themeToggleBtn) {
+    themeToggleBtn.classList.toggle('dark', html.classList.contains('dark'));
+    themeToggleBtn.addEventListener('click', function() {
+      if (isAnimating) return;
+
+      var goingDark = !html.classList.contains('dark');
+
+      if (hasGSAP) {
+        // ─── Cinematic warp transition ───
+        isAnimating = true;
+        if (goingDark) { triggerWarpToDark(); } else { triggerWarpToLight(); }
+      } else {
+        // ─── Simple fallback (no GSAP) ───
+        isAnimating = true;
+        if (goingDark) {
+          html.classList.add('dark');
+          themeToggleBtn.classList.add('dark');
+          localStorage.setItem('paperlens_theme', 'dark');
+        } else {
+          html.classList.remove('dark');
+          themeToggleBtn.classList.remove('dark');
+          localStorage.setItem('paperlens_theme', 'light');
+        }
+        // Use fxLayer for a quick flash transition
+        var fx = document.getElementById('fx-layer');
+        if (fx) {
+          fx.style.display = 'block';
+          fx.style.opacity = '1';
+          fx.style.background = goingDark ? '#010103' : '#EAE7E2';
+          fx.style.transition = 'opacity 0.4s ease-out';
+          setTimeout(function() { fx.style.opacity = '0'; }, 50);
+          setTimeout(function() { fx.style.display = 'none'; isAnimating = false; }, 500);
+        } else {
+          isAnimating = false;
+        }
+      }
+    });
+  }
+
+  // --- GSAP Cinematic Transitions (only defined if GSAP is available) ---
+  if (hasGSAP) {
+    var warpOverlay = document.createElement('div');
+    warpOverlay.id = 'warpOverlay';
+    warpOverlay.style.cssText = 'position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;';
+    document.body.appendChild(warpOverlay);
+
+    function triggerWarpToLight() {
+      warpOverlay.style.pointerEvents = 'all';
+      warpOverlay.style.background = '#EAE7E2';
+      warpOverlay.style.opacity = '0';
+      var tl = gsap.timeline({ onComplete: function() {
+        warpOverlay.style.opacity = '0';
+        warpOverlay.style.pointerEvents = 'none';
+        isAnimating = false;
+      }});
+      tl.call(function() {
+        html.classList.remove('dark');
+        themeToggleBtn.classList.remove('dark');
+        localStorage.setItem('paperlens_theme', 'light');
+      }, null, 0);
+      tl.to(warpOverlay, { opacity: 1, duration: 0.15, ease: 'power3.in' });
+      tl.to('.page-content', { scale: 0.96, filter: 'blur(4px)', duration: 0.2, ease: 'power3.in' }, '-=0.1');
+      tl.to(warpOverlay, { opacity: 0, duration: 0.7, ease: 'power4.out' }, '+=0.04');
+      tl.to('.page-content', { scale: 1, filter: 'blur(0px)', duration: 0.6, ease: 'elastic.out(1, 0.5)' }, '-=0.65');
+    }
+
+    function triggerWarpToDark() {
+      warpOverlay.style.pointerEvents = 'all';
+      warpOverlay.style.background = '#010103';
+      warpOverlay.style.opacity = '0';
+      var tl = gsap.timeline({ onComplete: function() {
+        warpOverlay.style.opacity = '0';
+        warpOverlay.style.pointerEvents = 'none';
+        isAnimating = false;
+      }});
+      tl.call(function() {
+        html.classList.add('dark');
+        themeToggleBtn.classList.add('dark');
+        localStorage.setItem('paperlens_theme', 'dark');
+      }, null, 0);
+      tl.to(warpOverlay, { opacity: 1, duration: 0.18, ease: 'power3.in' });
+      tl.to('.page-content', { scale: 0.96, filter: 'blur(4px)', duration: 0.2, ease: 'power3.in' }, '-=0.1');
+      tl.to(warpOverlay, { opacity: 0, duration: 0.7, ease: 'power4.out' }, '+=0.03');
+      tl.to('.page-content', { scale: 1, filter: 'blur(0px)', duration: 0.6, ease: 'elastic.out(1, 0.4)' }, '-=0.65');
+    }
+  }
+
+  // --- Language ---
+  window.__lang = localStorage.getItem('paperlens_lang') || 'en';
+
+  // i18n dictionary
+  window.__i18n = {
+    'app.name':           { en:'LearningTool',            cn:'LearningTool' },
+    'start.title1':       { en:'Read deeper.',            cn:'深度阅读。' },
+    'start.title2':       { en:'Practice smarter.',       cn:'科学刷题。' },
+    'start.badge':        { en:'Intelligent Learning',    cn:'智能学习' },
+    'start.quote':        { en:'Omnia, Lucili, aliena sunt; tempus tantum nostrum est.', cn:'Omnia, Lucili, aliena sunt; tempus tantum nostrum est.' },
+    'start.startBtn':     { en:'Start',                   cn:'开始使用' },
+    'start.ghBtn':        { en:'Star on GitHub',          cn:'Star on GitHub' },
+    'start.welcome':      { en:'Welcome back — your progress', cn:'欢迎回来 — 你的学习进度' },
+    'start.papers':       { en:'Papers read',             cn:'已读论文' },
+    'start.questions':    { en:'Questions done',          cn:'已完成题' },
+    'start.days':         { en:'Days active',             cn:'使用天数' },
+    'start.progress':     { en:'Progress',                cn:'学习进度' },
+    'start.footer':       { en:'Intelligent Reading · Scientific Practice · AI Powered', cn:'智能阅读 · 科学刷题 · AI驱动' },
+    'home.backStart':     { en:'← Start',                 cn:'← 开始' },
+    'home.reader':        { en:'Paper Reader',            cn:'论文阅读' },
+    'home.readerDesc':    { en:'Import PDF / DOCX / TXT / MD. AI-powered paper analysis.', cn:'导入 PDF / DOCX / TXT / MD，AI 逐段解析' },
+    'home.quiz':          { en:'Smart Quiz',              cn:'智能刷题' },
+    'home.quizDesc':      { en:'Weighted random · Error book · Sequential. Adaptive algorithm.', cn:'加权乱序 · 错题本 · 顺序模式' },
+    'home.template':      { en:'Quiz Template',           cn:'题库模板' },
+    'home.templateDesc':  { en:'JSON template download. Import-ready format.', cn:'JSON 格式模板，导入即用' },
+    'home.settings':      { en:'Settings',                cn:'设置' },
+    'home.settingsDesc':  { en:'AI Models · Algorithm params · Theme', cn:'AI 模型 · 算法参数 · 主题' },
+    'home.ready':         { en:'System Ready',            cn:'系统就绪' },
+    'home.accuracy':      { en:'Accuracy',                cn:'正确率' },
+    'home.modelsAdded':   { en:'models added',            cn:'已添加模型' },
+    'reader.import':      { en:'Import Paper',            cn:'导入论文' },
+    'reader.importDesc':  { en:'Click or drag — PDF, DOCX, TXT, MD', cn:'点击或拖拽 — PDF、DOCX、TXT、MD' },
+    'reader.selectFile':  { en:'Select File',             cn:'选择文件' },
+    'reader.aiExplain':   { en:'AI Analysis',             cn:'AI 解析' },
+    'reader.importExplain':{ en:'Import Explanation',     cn:'导入解释文档' },
+    'reader.explanationSource':{ en:'Explanation source:', cn:'解释来源：' },
+    'reader.focusPaper':  { en:'Focus: Paper',            cn:'主视角：论文' },
+    'reader.focusExplain':{ en:'Focus: Explanation',     cn:'主视角：解释' },
+    'reader.recentPapers':{ en:'Recently imported',       cn:'最近导入的论文' },
+    'quiz.modeSelect':    { en:'Select Quiz Mode',        cn:'选择刷题模式' },
+    'quiz.sequential':    { en:'Sequential',              cn:'顺序刷题' },
+    'quiz.sequentialDesc':{ en:'In order, first-pass learning', cn:'按题库顺序逐题作答' },
+    'quiz.weighted':      { en:'Weighted Shuffle',        cn:'加权乱序' },
+    'quiz.weightedDesc':  { en:'MFAW adaptive sorting',   cn:'MFAW 算法智能排序' },
+    'quiz.wrongbook':     { en:'Error Book',              cn:'错题本' },
+    'quiz.wrongbookDesc': { en:'Review all wrong answers', cn:'复习所有答错题目' },
+    'quiz.import':        { en:'Import Question Bank',    cn:'导入题库' },
+    'quiz.importDesc':    { en:'Upload JSON quiz file',   cn:'拖拽或点击上传 JSON' },
+    'quiz.selectFile':    { en:'Select File',             cn:'选择文件' },
+    'quiz.aiConvert':     { en:'AI Smart Convert',        cn:'AI 智能转题库' },
+    'quiz.aiConvertBeta': { en:'Beta',                    cn:'测试功能' },
+    'quiz.aiConvertDesc': { en:'Upload DOCX/MD/PDF, AI converts to quiz JSON. Requires AI model configured.', cn:'上传 DOCX/MD/PDF，AI 自动转为题库 JSON。需先配置 AI 模型。' },
+    'quiz.aiConvertBtn':  { en:'AI Convert',              cn:'AI 转换' },
+    'quiz.startBtn':      { en:'Start Quiz',              cn:'开始刷题' },
+    'quiz.importPrompt':  { en:'Import questions first',  cn:'请先导入题库' },
+    'quiz.wrongRepeat':   { en:'Wrong Repeat',            cn:'错题重复' },
+    'quiz.wrongRepeatDesc':{ en:'Re-add wrong answers to queue', cn:'答错后重新加入待刷队列' },
+    'quiz.autoRemove':    { en:'Auto Remove Mastered',    cn:'自动移除已掌握' },
+    'quiz.autoRemoveDesc':{ en:'Remove after consecutive correct', cn:'连续答对多次后自动移除' },
+    'quiz.questionsPerRoundDesc':{ en:'Number of questions per quiz round', cn:'每轮刷题出现的问题数量' },
+    'quiz.selectMode':    { en:'Select Quiz Mode',        cn:'选择刷题模式' },
+    'quiz.sequential':    { en:'Sequential',              cn:'顺序刷题' },
+    'quiz.sequentialDesc':{ en:'In order, first-pass learning', cn:'按题库顺序逐题作答，适合初次学习' },
+    'quiz.weighted':      { en:'Weighted Shuffle',        cn:'加权乱序' },
+    'quiz.weightedDesc':  { en:'MFAW algorithm, focus on weak points', cn:'MFAW 算法智能排序，重点突破薄弱项' },
+    'quiz.wrongbook':     { en:'Error Book',              cn:'错题本' },
+    'quiz.wrongbookDesc': { en:'Review all wrong answers', cn:'复习所有答错题目，查漏补缺' },
+    'quiz.currentMode':   { en:'Current mode',            cn:'当前模式' },
+    'quiz.importTitle':   { en:'Import Question Bank',    cn:'导入题库' },
+    'quiz.importFile':    { en:'Import question file',    cn:'导入题库文件' },
+    'quiz.selectFile':    { en:'Select File',             cn:'选择文件' },
+    'quiz.loaded':        { en:'Loaded',                  cn:'已加载' },
+    'quiz.clear':         { en:'Clear',                   cn:'清除' },
+    'quiz.settings':      { en:'Quiz Settings',           cn:'刷题设置' },
+    'quiz.questionsPerRound':{ en:'Questions per round',  cn:'每轮题数' },
+    'quiz.startBtn':      { en:'Start Quiz',              cn:'开始刷题' },
+    'quiz.importPrompt':  { en:'Import a question file to start', cn:'请先导入题库文件后再开始' },
+    'quiz.aiConvertTitle':{ en:'AI Smart Convert',        cn:'AI 智能转题库' },
+    'quiz.aiConvertDesc': { en:'Upload DOCX/MD/PDF/TXT/JSON, AI converts to quiz format. Requires AI model in Settings.', cn:'上传 DOCX/MD/PDF/TXT/JSON 文件，由 AI 自动转换为题库 JSON。需先配置 AI 模型。' },
+    'quiz.aiConvertBtn':  { en:'AI Convert',              cn:'AI 转换' },
+    'quiz.aiConvertBeta': { en:'Beta',                    cn:'测试功能' },
+    'quiz.setsTitle':     { en:'Loaded Question Sets',    cn:'已加载的题库' },
+    'quiz.noSets':        { en:'No question sets loaded.', cn:'暂无题库，请导入或使用 AI 转换' },
+    'settings.modelMgmt': { en:'AI Model Management',     cn:'AI 模型管理' },
+    'settings.addModel':  { en:'Add Model',               cn:'添加模型' },
+    'settings.modelDesc': { en:'Configure your AI providers. Compatible with OpenAI API format.', cn:'配置 AI 服务商。兼容 OpenAI API 格式。' },
+    'settings.noModels':  { en:'No models added yet',     cn:'尚未添加模型' },
+    'settings.noModelsDesc':{ en:'Click "Add Model" to configure your first AI provider.', cn:'点击「添加模型」配置第一个 AI 服务商。' },
+    'settings.mfawParams':{ en:'Quiz Algorithm Parameters', cn:'刷题算法参数' },
+    'settings.appearance':{ en:'Appearance',              cn:'外观' },
+    'settings.themeMode': { en:'Theme Mode',              cn:'主题模式' },
+    'settings.dataMgmt':  { en:'Data Management',         cn:'数据管理' },
+    'settings.exportData':{ en:'Export Data',             cn:'导出数据' },
+    'settings.importData':{ en:'Import Data',             cn:'导入数据' },
+    'settings.clearData': { en:'Clear All Data',          cn:'清除所有数据' },
+    'settings.addModelTitle':{ en:'Add AI Model',           cn:'添加 AI 模型' },
+    'settings.providerName':{ en:'Provider Name',           cn:'服务商名称' },
+    'settings.apiKey':      { en:'API Key',                 cn:'API 密钥' },
+    'settings.baseUrl':     { en:'API Base URL',            cn:'API 请求地址' },
+    'settings.modelName':   { en:'Model Name',              cn:'模型名称' },
+    'settings.testConn':    { en:'Test Connection',         cn:'测试连接' },
+    'settings.saveModel':   { en:'Save',                    cn:'保存' },
+    'settings.aboutName':   { en:'App Name',                cn:'应用名称' },
+    'settings.aboutVersion':{ en:'Version',                 cn:'版本' },
+    'settings.aboutAlgo':   { en:'Quiz Algorithm',          cn:'刷题算法' },
+    'settings.aboutAI':     { en:'AI Support',              cn:'AI 接入' },
+    'settings.aboutAIVal':  { en:'Custom provider / OpenAI-compatible', cn:'自定义服务商 / 兼容 OpenAI API' },
+    'settings.aboutStorage':{ en:'Data Storage',            cn:'数据存储' },
+    'settings.aboutStorageVal':{ en:'Browser localStorage', cn:'浏览器本地存储' },
+    'settings.mfawParamsDesc':{ en:'Adjust MFAW algorithm parameters. Takes effect next round.', cn:'调整 MFAW 加权乱序算法的参数。修改后对下一轮刷题生效。' },
+    'settings.alpha':       { en:'Error Weight (&alpha;)',  cn:'错误权重 (&alpha;)' },
+    'settings.alphaDesc':   { en:'Higher = wrong questions appear more often', cn:'值越大错题出现概率越高' },
+    'settings.beta':        { en:'Time Decay (&beta;)',     cn:'时间衰减 (&beta;)' },
+    'settings.betaDesc':    { en:'Controls how fast old wrong answers decay', cn:'控制旧错题权重下降速度' },
+    'settings.gamma':       { en:'Streak Reward (&gamma;)', cn:'连续正确奖励 (&gamma;)' },
+    'settings.gammaDesc':   { en:'Reduces probability of mastered questions', cn:'降低已掌握题目的出现概率' },
+    'settings.delta':       { en:'Random Jitter (&delta;)', cn:'随机扰动 (&delta;)' },
+    'settings.deltaDesc':   { en:'Noise level for question diversity', cn:'随机噪声幅度，增加出题多样性' },
+    'settings.ema':         { en:'EMA Smoothing',           cn:'EMA 平滑率' },
+    'settings.emaDesc':     { en:'Exponential moving average rate for weight history', cn:'指数移动平均速率，平滑历史权重变化' },
+    'settings.lambda':      { en:'Difficulty Sensitivity (&lambda;)', cn:'难度调整 (&lambda;)' },
+    'settings.lambdaDesc':  { en:'Response strength to question difficulty', cn:'控制算法对题目难度的响应强度' },
+    'settings.resetDefault':{ en:'Reset Defaults',          cn:'恢复默认' },
+    'settings.saveParams':  { en:'Save Parameters',         cn:'保存参数' },
+    'settings.themeModeDesc':{ en:'Toggle between light and dark theme', cn:'切换浅色/深色主题' },
+    'settings.dataMgmtDesc':{ en:'Backup your learning data or restore from a file.', cn:'备份学习数据到本地文件，或从备份恢复。' },
+    'settings.exportTitle': { en:'Export Backup',           cn:'导出备份' },
+    'settings.exportDesc':  { en:'Save all data as a JSON file', cn:'将所有数据保存为 JSON 文件' },
+    'settings.importTitle': { en:'Import Backup',           cn:'导入备份' },
+    'settings.importDesc':  { en:'Restore from a previously exported JSON file', cn:'从之前导出的 JSON 备份文件恢复数据' },
+    'settings.clearTitle':  { en:'Clear All Data',          cn:'清除所有数据' },
+    'settings.clearDesc':   { en:'Delete all LearningTool data. Export backup first.', cn:'删除浏览器中所有数据。建议先导出备份。' },
+    'settings.verified':    { en:'Verified',                cn:'已验证' },
+    'settings.unverified':  { en:'Unverified',              cn:'未验证' },
+    'settings.default':     { en:'Default',                 cn:'默认' },
+    'settings.setDefault':  { en:'Set as default',          cn:'设为默认' },
+    'settings.delete':      { en:'Delete',                  cn:'删除' },
+    'reader.importTitle':   { en:'Import Paper',            cn:'导入论文文件' },
+    'reader.importDesc':    { en:'Click or drag — PDF, DOCX, TXT, MD, JSON', cn:'点击此处或拖拽文件 — 支持 PDF、DOCX、TXT、MD、JSON' },
+    'reader.selectFile':    { en:'Select File',             cn:'选择文件' },
+    'reader.recentPapers':  { en:'Recently imported',       cn:'最近导入的论文' },
+    'reader.aiExplain':     { en:'AI Analysis',             cn:'AI 解析' },
+    'reader.importExplain': { en:'Import Explanation',      cn:'导入解释文档' },
+    'reader.explanationSource':{ en:'Explanation source:',  cn:'解释来源：' },
+    'reader.chatHint1':     { en:'Select text in the paper to trigger AI analysis', cn:'在左侧论文中选中文本即可触发 AI 解析' },
+    'reader.chatHint2':     { en:'Or type a question to start chatting', cn:'或输入问题开始对话' },
+    'reader.send':          { en:'Send',                    cn:'发送' },
+    'reader.thinking':      { en:'AI is thinking...',       cn:'AI 正在思考...' },
+    'reader.importExplainTitle':{ en:'Import Explanation Document', cn:'导入解释文档' },
+    'reader.importExplainDesc':{ en:'Click "Import Explanation" above to load companion notes.', cn:'点击上方"导入解释文档"按钮加载配套解析。' },
+    'reader.keyHint1':      { en:'Switch focus',            cn:'切换主视角' },
+    'reader.keyHint2':      { en:'Exit annotation mode',    cn:'退出标注模式' },
+    'reader.keyHint3':      { en:'Select text for AI',      cn:'选中文本 → AI 解析' },
+    'template.title':       { en:'Quiz JSON Template',      cn:'题库 JSON 模板' },
+    'template.download':    { en:'Download Template (template.json)', cn:'下载模板 (template.json)' },
+    'template.orCopy':      { en:'Or copy the JSON below',  cn:'或复制下方 JSON 自行粘贴' },
+    'template.copy':        { en:'Copy',                    cn:'复制' },
+    'template.fields':      { en:'Field Descriptions',      cn:'字段说明' },
+    'template.field':       { en:'Field',                   cn:'字段' },
+    'template.type':        { en:'Type',                    cn:'类型' },
+    'template.required':    { en:'Required',                cn:'必填' },
+    'template.description': { en:'Description',             cn:'说明' },
+    'template.idDesc':      { en:'Unique question ID, no duplicates', cn:'题目唯一编号，不可重复' },
+    'template.qDesc':       { en:'Question text, plain text', cn:'题目内容，支持纯文本' },
+    'template.optDesc':     { en:'Array of 4 option strings, A. B. C. D. prefix', cn:'4 个选项的字符串数组，建议以 A. B. C. D. 开头' },
+    'template.ansDesc':     { en:'Correct answer index (0=A, 1=B, 2=C, 3=D)', cn:'正确答案的索引 (0=A, 1=B, 2=C, 3=D)' },
+    'template.expDesc':     { en:'Answer explanation, shown after wrong answer', cn:'答案解析，答错后展示。可为空字符串' },
+    'template.arrayNote':   { en:'Multiple objects allowed, array length = total', cn:'可包含多个题目对象，数组长度即题库总数' },
+    'template.note':        { en:'Note',                    cn:'提示' },
+    'template.noteDesc':    { en:'Supports Word, Markdown, PDF import with auto-parsing. JSON recommended.', cn:'也支持导入 Word、Markdown、PDF 文件，系统自动解析。推荐 JSON 格式。' },
+    'template.desc':        { en:'Prepare quiz files in the following JSON format. Each question includes the question text, four options, correct answer index, and explanation.', cn:'按照以下 JSON 格式准备题库文件，即可导入 LearningTool 进行刷题。每道题包含题目、四个选项、正确答案索引及解析。' },
+    'settings.about':       { en:'About',                   cn:'关于' },
+    'admin.signIn':       { en:'Sign In',                 cn:'登录' },
+    'admin.username':     { en:'Username',                cn:'用户名' },
+    'admin.password':     { en:'Password',                cn:'密码' },
+    'admin.cancel':       { en:'Cancel',                  cn:'取消' },
+    'docs.features':      { en:'Features',                cn:'功能特性' },
+    'docs.heading':       { en:'Everything you need for academic reading.', cn:'学术阅读所需的一切。' },
+    'docs.sub':           { en:'LearningTool combines document analysis, AI-powered explanations, and adaptive quiz practice into one elegant tool.', cn:'LearningTool 将文档分析、AI 解释和自适应刷题整合为一个优雅的工具。' },
+    'docs.reader':        { en:'Paper Reader',            cn:'论文阅读' },
+    'docs.readerDesc':    { en:'Import PDF, DOCX, TXT, or Markdown papers. View the original document while AI explains every paragraph. Tab to switch focus.', cn:'导入 PDF、DOCX、TXT 或 Markdown 论文。查看原始文档，AI 逐段解释。Tab 键切换主视角。' },
+    'docs.quiz':          { en:'Smart Quiz',              cn:'智能刷题' },
+    'docs.quizDesc':      { en:'Three modes — Sequential, Weighted Shuffle (MFAW algorithm), and Error Book. Adaptive weights ensure efficient review.', cn:'三种模式——顺序、加权乱序（MFAW 算法）和错题本。自适应权重确保高效复习。' },
+    'docs.ai':            { en:'Bring Your Own AI',       cn:'自带 AI' },
+    'docs.aiDesc':        { en:'Works with any OpenAI-compatible API. DeepSeek, OpenAI, Claude, Gemini, local LLMs — just add your key in Settings.', cn:'兼容任何 OpenAI API 格式。DeepSeek、OpenAI、Claude、Gemini、本地 LLM——在设置中添加密钥即可。' },
+    'docs.lang':          { en:'EN / 中文',               cn:'EN / 中文' },
+    'docs.langDesc':      { en:'Full bilingual interface. Toggle between English and Chinese with a single click. Your data stays yours — everything is local.', cn:'完整双语界面。一键切换中英文。你的数据始终在本地。' },
+    'docs.docker':        { en:'Docker Ready',            cn:'Docker 支持' },
+    'docs.dockerDesc':    { en:'One-command deployment via Docker Compose. Works on Linux, macOS, and Windows. Port mapping, volume persistence, health checks.', cn:'Docker Compose 一键部署。支持 Linux、macOS、Windows。端口映射、数据卷持久化、健康检查。' },
+    'docs.cli':           { en:'CLI Tool',                cn:'CLI 工具' },
+    'docs.cliDesc':       { en:'Full command-line interface with verbose logging. Start, stop, check status — all from terminal. Cross-platform batch + bash scripts.', cn:'完整命令行接口，详细日志输出。启动、停止、状态检查——全部在终端完成。跨平台 batch + bash 脚本。' },
+    'docs.quick':         { en:'Quick Start',             cn:'快速开始' },
+    'docs.quickTitle':    { en:'Three steps to start.',   cn:'三步开始使用。' },
+    'docs.quickSub':      { en:'No sign-up. No cloud. Everything runs on your machine.', cn:'无需注册。无需云端。一切运行在你的设备上。' },
+    'docs.step1':         { en:'Configure AI',            cn:'配置 AI' },
+    'docs.step1Desc':     { en:'Add your API key in Settings — or set .env for admin-managed access.', cn:'在设置中添加 API 密钥——或在 .env 中配置管理员密钥。' },
+    'docs.step2':         { en:'Import Content',          cn:'导入内容' },
+    'docs.step2Desc':     { en:'Drag a paper PDF or upload a quiz JSON. AI converts documents to quiz questions automatically.', cn:'拖入论文 PDF 或上传题库 JSON。AI 自动将文档转换为题库。' },
+    'docs.step3':         { en:'Read & Practice',         cn:'阅读与练习' },
+    'docs.step3Desc':     { en:'AI explains papers. The quiz algorithm adapts to your weak points. Progress saved locally.', cn:'AI 解释论文。刷题算法根据薄弱点自适应调整。进度保存在本地。' },
+    'docs.scroll':        { en:'Scroll to explore',       cn:'向下滚动探索' },
+  };
+
+  window.__t = function(key, fallback) {
+    var entry = window.__i18n && window.__i18n[key];
+    if (entry) return entry[window.__lang] || entry.en || fallback || key;
+    return fallback || key;
+  };
+
+  // Sync lang toggle — runs on load and every page navigation
+  function syncLangUI() {
+    var toggle = document.getElementById('langToggle');
+    if (!toggle) return;
+    var isCn = window.__lang === 'cn';
+    toggle.classList.toggle('cn', isCn);
+    var opts = toggle.querySelectorAll('.lang-option');
+    opts.forEach(function(o) { o.classList.toggle('active', o.dataset.lang === window.__lang); });
+
+    // 1. Update data-i18n elements
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var key = el.dataset.i18n;
+      var text = window.__t(key);
+      if (!text) return;
+      if (el.tagName === 'INPUT' && (el.type === 'button' || el.type === 'submit')) {
+        el.value = text;
+      } else if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.placeholder = text;
+      } else {
+        el.textContent = text;
+      }
+    });
+
+    // 2. Walk all text nodes and replace using reverse lookup
+    if (!window.__i18nReverse) {
+      window.__i18nReverse = {};
+      Object.keys(window.__i18n).forEach(function(k) {
+        var entry = window.__i18n[k];
+        if (entry.en && entry.en !== entry.cn) window.__i18nReverse[entry.en] = k;
+        if (entry.cn && entry.cn !== entry.en) window.__i18nReverse[entry.cn] = k;
+      });
+    }
+
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    var textNodes = [];
+    while (walker.nextNode()) {
+      var p = walker.currentNode.parentNode;
+      // Skip script, style, pre, code, kbd, svg, and hero lines
+      if (!p || p.closest('script,style,pre,code,kbd,svg')) continue;
+      if (p.closest('.hero-line') || p.closest('.start-title-line')) continue;
+      // Skip elements that already have data-i18n (they're handled by step 1)
+      if (p.closest('[data-i18n]') && p.closest('[data-i18n]') !== p) continue;
+      textNodes.push(walker.currentNode);
+    }
+
+    textNodes.forEach(function(node) {
+      var text = node.textContent.trim();
+      if (!text || text.length < 2) return;
+      var key = window.__i18nReverse[text];
+      if (key) {
+        node.textContent = window.__t(key, text);
+      }
+    });
+
+    document.dispatchEvent(new CustomEvent('lang-change', { detail: { lang: window.__lang } }));
+  }
+
+  var langToggle = document.getElementById('langToggle');
+  if (langToggle) {
+    langToggle.addEventListener('click', function() {
+      window.__lang = window.__lang === 'cn' ? 'en' : 'cn';
+      localStorage.setItem('paperlens_lang', window.__lang);
+      syncLangUI();
+    });
+    // Initial sync
+    syncLangUI();
+  }
+
+  // Re-sync i18n on every page navigation
+  document.addEventListener('page-loaded', function() {
+    setTimeout(syncLangUI, 80);
+  });
+
+  // --- Dark mode floating particles ---
+  var particlesContainer = document.getElementById('darkParticles');
+  if (particlesContainer) {
+    for (var pi = 0; pi < 24; pi++) {
+      var p = document.createElement('div');
+      p.className = 'dark-particle';
+      p.style.left = (Math.random() * 100) + '%';
+      p.style.top = (Math.random() * 100) + '%';
+      p.style.animationDelay = (Math.random() * 6) + 's';
+      particlesContainer.appendChild(p);
+    }
+  }
+
+  // Scroll progress bar and parallax are now handled by Lenis + GSAP in app.js
+})();
+</script>
 </body>
 </html>

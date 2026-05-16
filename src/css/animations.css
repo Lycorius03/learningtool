@@ -122,3 +122,14 @@
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
+
+/* Prefers reduced motion — disable all animations */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .stagger-children > * { opacity: 1; animation: none; }
+  .reveal:not(.revealed) { opacity: 1; transform: none; }
+}

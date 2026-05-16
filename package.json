@@ -1,11 +1,11 @@
 {
   "name": "learningtool",
   "version": "1.0.0",
-  "description": "LearningTool — 智能论文阅读 & 刷题工具 · Claude 古典美学",
+  "description": "LearningTool — 智能论文阅读 & 刷题工具",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js --dev"
+    "dev": "node server.js"
   },
   "dependencies": {
     "express": "^4.21.0",

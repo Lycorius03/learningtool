@@ -7,6 +7,18 @@ export class AnnotationEngine {
   constructor() {
     /** @type {Array<{id: string, type: 'highlight'|'note', text: string, note?: string, position: {start: number, end: number}, timestamp: string}>} */
     this.annotations = [];
+    this._active = false;
+  }
+
+  /** Toggle annotation mode on/off. Returns the new state. */
+  toggle() {
+    this._active = !this._active;
+    return this._active;
+  }
+
+  /** Whether annotation mode is currently active. */
+  isActive() {
+    return this._active;
   }
 
   // --- Public API ---

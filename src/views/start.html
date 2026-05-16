@@ -1,0 +1,180 @@
+<style>
+  #start-root { --s-bg: #EAE7E2; --s-text: #1A1A1A; --s-accent: #9A8452; --s-ease: cubic-bezier(0.7, 0, 0.3, 1); position: relative; height: 100vh; background: var(--s-bg); color: var(--s-text); font-family: var(--font-mono); transition: background 1.5s var(--s-ease); overflow: hidden; }
+  .dark #start-root { --s-bg: #010103; --s-text: #F0F0F0; --s-accent: #00F3FF; }
+
+  #start-root canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; width: 100vw; height: 100vh; }
+  #start-root .overlay { position: absolute; inset: 0; z-index: 10; padding: 60px; display: flex; flex-direction: column; justify-content: space-between; }
+  #start-root .logo { font-family: var(--font-serif); font-size: 2.4rem; font-style: italic; letter-spacing: -0.02em; }
+  #start-root .cta-wrap { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 11; }
+  #start-root .vortex-btn { background: none; border: 1px solid var(--s-accent); padding: 22px 48px; border-radius: 100px; color: var(--s-accent); font-size: 0.7rem; letter-spacing: 0.6em; text-transform: uppercase; backdrop-filter: blur(15px); cursor: pointer; transition: all 0.6s var(--s-ease); font-family: var(--font-mono); }
+  #start-root .vortex-btn:hover { background: var(--s-accent); color: var(--s-bg); transform: scale(1.1); box-shadow: 0 0 50px var(--s-accent); }
+  #start-root .gh-link { background: none; border: 1px solid var(--color-border-default); padding: 12px 28px; border-radius: 100px; color: var(--color-text-tertiary); font-size: 0.58rem; letter-spacing: 0.35em; text-transform: uppercase; backdrop-filter: blur(12px); text-decoration: none; font-family: var(--font-mono); transition: all 0.5s var(--s-ease); display: inline-flex; align-items: center; gap: 6px; }
+  #start-root .gh-link:hover { border-color: var(--color-text-primary); color: var(--color-text-primary); transform: translateY(-2px); }
+  #start-root .bottom-row { display: flex; justify-content: space-between; align-items: flex-end; }
+  #start-root .desc { max-width: 320px; font-size: 0.7rem; line-height: 2; opacity: 0.4; letter-spacing: 0.05em; }
+  #start-root .year { font-family: var(--font-serif); font-size: 2.2rem; font-style: italic; opacity: 0.45; }
+
+  .dark #start-root .desc { opacity: 0.6; }
+  .dark #start-root .year { opacity: 0.65; }
+  .dark #start-root .logo { text-shadow: 0 0 20px rgba(0,243,255,0.3); }
+
+  #start-docs { background: var(--color-bg-base); color: var(--color-text-primary); padding: var(--space-20) var(--space-8); max-width: 1100px; margin: 0 auto; }
+  #start-docs .docs-divider { width: 1px; height: 48px; background: var(--color-border-default); margin: 0 auto var(--space-16); }
+  #start-docs .section-kicker { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent); margin-bottom: var(--space-3); }
+  #start-docs .section-heading { font-family: var(--font-serif); font-size: clamp(30px, 5vw, 48px); font-weight: 600; letter-spacing: -0.04em; margin-bottom: var(--space-4); line-height: 1.1; }
+  #start-docs .section-sub { font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-text-tertiary); line-height: 1.9; max-width: 560px; margin-bottom: var(--space-14); letter-spacing: 0.03em; opacity: 0.55; }
+  #start-docs .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-20); }
+  #start-docs .feature-card { background: var(--color-bg-white); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-xl); padding: var(--space-7) var(--space-6); transition: transform 0.5s, border-color 0.5s, box-shadow 0.5s; }
+  #start-docs .feature-card:hover { border-color: var(--color-accent); transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.06); }
+  .dark #start-docs .feature-card:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
+  #start-docs .feature-icon { width: 44px; height: 44px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-5); font-size: 20px; }
+  #start-docs .feature-card h4 { font-family: var(--font-serif); font-size: var(--text-lg); font-weight: 600; margin-bottom: var(--space-2); }
+  #start-docs .feature-card p { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.7; }
+  #start-docs .feature-tag { display: inline-block; margin-top: var(--space-3); font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-accent); opacity: 0.6; }
+  #start-docs .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-bottom: var(--space-16); }
+  #start-docs .step-card { text-align: center; padding: var(--space-8) var(--space-4); border-top: 2px solid var(--color-border-subtle); transition: border-color 0.5s, transform 0.5s; }
+  #start-docs .step-card:hover { border-color: var(--color-accent); transform: translateY(-4px); }
+  #start-docs .step-num { width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--color-accent); color: var(--color-accent); display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-size: 26px; font-style: italic; margin: 0 auto var(--space-6); transition: all 0.5s; }
+  #start-docs .step-card:hover .step-num { background: var(--color-accent); color: var(--color-bg-base); box-shadow: 0 0 40px var(--color-accent); }
+  #start-docs .step-card h4 { font-family: var(--font-serif); font-size: var(--text-md); font-weight: 600; margin-bottom: var(--space-2); }
+  #start-docs .step-card p { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.7; }
+  #start-docs .reveal-el { opacity: 0; transform: translateY(28px); transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1); }
+  #start-docs .reveal-el.visible { opacity: 1; transform: none; }
+  #start-docs .stagger-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-12); }
+  #start-docs .stagger-item { background: var(--color-bg-white); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); padding: var(--space-6); }
+  #start-docs .stagger-item .si-icon { font-size: 24px; margin-bottom: var(--space-3); }
+  #start-docs .stagger-item .si-title { font-family: var(--font-serif); font-weight: 600; font-size: var(--text-md); margin-bottom: 4px; }
+  #start-docs .stagger-item .si-desc { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.65; }
+  #start-footer { text-align: center; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-tertiary); padding: var(--space-16) 0 var(--space-6); letter-spacing: 0.05em; opacity: 0.4; }
+  @media (max-width: 700px) { #start-docs .steps-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div id="start-root">
+  <div class="overlay">
+    <div class="header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div class="logo">LearningTool</div>
+      <div style="font-size:0.6rem;letter-spacing:0.6em;opacity:0.5;text-align:right;">INTELLIGENT SYSTEM<br>DIMENSION: LEARNING</div>
+    </div>
+    <div class="bottom-row">
+      <div class="desc">[STATED]: KNOWLEDGE DECAYS WITHOUT ORDER.<br>[ACTION]: IMPORT / ANALYZE / PRACTICE / MASTER.<br>[STATUS]: SYSTEM OPERATIONAL.</div>
+      <div class="year">MMXXVI</div>
+    </div>
+  </div>
+
+  <div class="cta-wrap">
+    <button class="vortex-btn" id="startBtn">START</button>
+    <a class="gh-link" href="https://github.com/Lycorius03/learningtool" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GITHUB
+    </a>
+  </div>
+</div>
+
+<div id="start-docs">
+  <div class="docs-divider"></div>
+  <div class="reveal-el">
+    <div class="section-kicker">Features</div>
+    <div class="section-heading">Everything you need<br>for academic reading.</div>
+    <div class="section-sub">LearningTool combines document analysis, AI-powered explanations, and adaptive quiz practice into one elegant tool. No sign-up. No cloud. Everything runs on your machine.</div>
+  </div>
+  <div class="feature-grid">
+    <div class="feature-card reveal-el"><div class="feature-icon" style="background:var(--color-accent-soft);">&#x1F4C4;</div><h4>Paper Reader</h4><p>Import PDF, DOCX, TXT, or Markdown papers. View the original document while AI explains every paragraph. Tab to switch focus.</p><span class="feature-tag">[PARSER] PDF/DOCX/TXT/MD/JSON</span></div>
+    <div class="feature-card reveal-el"><div class="feature-icon" style="background:var(--color-success-bg);">&#x2713;</div><h4>Smart Quiz</h4><p>Three adaptive modes — Sequential, Weighted Shuffle (MFAW algorithm), and Error Book. Every answer trains the adaptive weight system.</p><span class="feature-tag">[ALGO] MFAW + Alias Method O(1)</span></div>
+    <div class="feature-card reveal-el"><div class="feature-icon" style="background:var(--color-info-bg);">&#x2699;</div><h4>Bring Your Own AI</h4><p>Works with any OpenAI-compatible API. DeepSeek, OpenAI, Claude, Gemini, Groq, Ollama — configure in Settings.</p><span class="feature-tag">[PROTO] OpenAI API Compatible</span></div>
+    <div class="feature-card reveal-el"><div class="feature-icon" style="background:var(--color-warning-bg);">&#x1F310;</div><h4>EN / 中文</h4><p>Full bilingual interface. Toggle between English and Chinese with one click. Zero telemetry, fully local.</p><span class="feature-tag">[i18n] Text-Node Walker</span></div>
+    <div class="feature-card reveal-el"><div class="feature-icon" style="background:var(--color-error-bg);">&#x1F4E6;</div><h4>Docker Ready</h4><p>One-command deployment. HEALTHCHECK probe, volume persistence, port mapping. Linux, macOS, Windows.</p><span class="feature-tag">[OPS] docker-compose up -d</span></div>
+    <div class="feature-card reveal-el"><div class="feature-icon" style="background:var(--color-bg-elevated);">&#x1F5A5;</div><h4>CLI Tool</h4><p>Full command-line interface with verbose logging. Start, stop, status, logs — all from terminal. Cross-platform.</p><span class="feature-tag">[CLI] learntool start|stop|status</span></div>
+  </div>
+  <div class="reveal-el" style="margin-bottom:var(--space-12);">
+    <div class="section-kicker">Quick Start</div>
+    <div class="section-heading">Three steps to begin.</div>
+    <div class="section-sub">No registration. No cloud. Everything on your machine.</div>
+  </div>
+  <div class="steps-grid">
+    <div class="step-card reveal-el"><div class="step-num">I</div><h4>Configure AI</h4><p>Add your API key in Settings — 15+ provider presets. Or set .env for admin access.</p></div>
+    <div class="step-card reveal-el"><div class="step-num">II</div><h4>Import Content</h4><p>Drag a paper PDF, upload a quiz JSON, or use AI Smart Convert to auto-generate.</p></div>
+    <div class="step-card reveal-el"><div class="step-num">III</div><h4>Read &amp; Practice</h4><p>AI explains every paragraph. MFAW algorithm adapts to weak points. Progress saved locally.</p></div>
+  </div>
+  <div class="stagger-grid">
+    <div class="stagger-item reveal-el"><div class="si-icon">⚡</div><div class="si-title">Zero Cloud</div><div class="si-desc">Everything runs locally. No accounts, no telemetry.</div></div>
+    <div class="stagger-item reveal-el"><div class="si-icon">🌊</div><div class="si-title">MFAW Algorithm</div><div class="si-desc">Adaptive weighting — weak points get priority.</div></div>
+    <div class="stagger-item reveal-el"><div class="si-icon">✦</div><div class="si-title">Spring Physics</div><div class="si-desc">Hooke's Law simulation — real mass, stiffness, damping.</div></div>
+    <div class="stagger-item reveal-el"><div class="si-icon">🔗</div><div class="si-title">OpenAI Compatible</div><div class="si-desc">Any API speaking OpenAI format — cloud or local.</div></div>
+    <div class="stagger-item reveal-el"><div class="si-icon">🎯</div><div class="si-title">GPU-Composited</div><div class="si-desc">Only transform + opacity. 60fps guaranteed.</div></div>
+    <div class="stagger-item reveal-el"><div class="si-icon">♿</div><div class="si-title">Accessible</div><div class="si-desc">Respects prefers-reduced-motion. Inclusive by default.</div></div>
+  </div>
+</div>
+<div id="start-footer">INTELLIGENT READING &middot; SCIENTIFIC PRACTICE &middot; AI POWERED &middot; MMXXVI</div>
+
+<script>
+(function(){
+var root=document.getElementById('start-root');
+if(!root||typeof THREE==='undefined')return;
+var d=document.documentElement.classList.contains('dark');
+var s=new THREE.Scene(),c=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000);
+var r=new THREE.WebGLRenderer({antialias:true,alpha:true});
+r.setPixelRatio(devicePixelRatio);r.setSize(innerWidth,innerHeight);r.physicallyCorrectLights=true;
+root.insertBefore(r.domElement,root.firstChild);c.position.z=10;
+s.add(new THREE.AmbientLight(0xffffff,0.4));s.add(new THREE.DirectionalLight(0xffffff,0.6));
+var g=new THREE.Group();s.add(g);
+var sh=[];
+function cr(rad,ct,col,sz){
+  var gr=new THREE.Group();
+  var geo=new THREE.BoxGeometry(sz.w,sz.h,sz.d);
+  var mat=new THREE.MeshPhysicalMaterial({color:col,metalness:0.1,roughness:0.2,transparent:true,opacity:0.6,transmission:0.5,thickness:2});
+  for(var i=0;i<ct;i++){var m=new THREE.Mesh(geo,mat.clone());m.position.set(Math.cos(i/ct*Math.PI*2)*rad,Math.sin(i/ct*Math.PI*2)*rad,0);m.lookAt(0,0,0);gr.add(m);sh.push(m);}
+  return gr;
+}
+function ga(){return document.documentElement.classList.contains('dark')?0x00F3FF:0x9A8452;}
+var ri=cr(4,12,ga(),{w:0.3,h:0.3,d:2}),ro=cr(6.5,60,ga(),{w:0.1,h:0.1,d:1});
+g.add(ri,ro);
+var hg=new THREE.CylinderGeometry(0.02,0.12,4,4),hm=new THREE.MeshPhysicalMaterial({color:ga(),metalness:0.8,roughness:0.2});
+var h=new THREE.Mesh(hg,hm);h.position.y=2;var hp=new THREE.Group();hp.add(h);g.add(hp);
+var pc=3000,pg=new THREE.BufferGeometry(),pp=new Float32Array(pc*3);
+for(var i=0;i<pc*3;i++)pp[i]=(Math.random()-0.5)*60;
+pg.setAttribute('position',new THREE.BufferAttribute(pp,3));
+var pm=new THREE.PointsMaterial({size:0.025,color:ga(),transparent:true,opacity:0.35,depthWrite:false});
+var p=new THREE.Points(pg,pm);s.add(p);
+if(d){var a=ga();hm.emissive.set(a);hm.emissiveIntensity=2;sh.forEach(function(x){x.material.emissive.set(a);x.material.emissiveIntensity=0.5;});}
+function uc(){var n=new Date(),ss=n.getSeconds(),mm=n.getMinutes();
+  if(typeof gsap!=='undefined'){
+    gsap.to(hp.rotation,{z:-(ss/60)*Math.PI*2,duration:0.5,ease:'back.out(2)',onStart:function(){gsap.fromTo(c.position,{x:0.03},{x:0,duration:0.1});}});
+    gsap.to(ri.rotation,{z:-(n.getHours()%12+mm/60)*(Math.PI/6),duration:1,ease:'power2.out'});
+    gsap.to(ro.rotation,{z:-(mm+ss/60)*(Math.PI/30),duration:1,ease:'power2.out'});
+  }
+}
+setInterval(uc,1000);uc();
+var mx=0,my=0;
+addEventListener('mousemove',function(e){mx=(e.clientX/innerWidth-0.5)*2;my=(e.clientY/innerHeight-0.5)*2;});
+var o=new MutationObserver(function(){
+  d=document.documentElement.classList.contains('dark');var a=ga();
+  if(typeof gsap==='undefined')return;
+  var tl=gsap.timeline();
+  tl.to(c.position,{z:25,duration:0.8,ease:'power4.in'});
+  tl.to(g.scale,{x:0.1,y:0.1,z:20,duration:0.8,ease:'power4.in'},0);
+  tl.to(g.rotation,{z:'+=6.28',duration:1.2,ease:'power4.inOut'},0);
+  tl.call(function(){pm.color.set(a);hm.color.set(a);hm.emissive.set(d?a:0);hm.emissiveIntensity=d?2:0;sh.forEach(function(x){x.material.color.set(a);x.material.emissive.set(d?a:0);x.material.emissiveIntensity=d?0.5:0;});},null,0.8);
+  tl.to(c.position,{z:10,duration:1.5,ease:'elastic.out(1,0.4)'});
+  tl.to(g.scale,{x:1,y:1,z:1,duration:1.5,ease:'elastic.out(1,0.4)'},'-=1.5');
+});
+o.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+var raf;
+function an(){
+  if(!root.isConnected){cancelAnimationFrame(raf);r.dispose();o.disconnect();return;}
+  raf=requestAnimationFrame(an);
+  if(typeof gsap!=='undefined')gsap.to(g.rotation,{y:mx*0.4,x:-my*0.4,duration:2,ease:'power2.out'});
+  p.rotation.y+=0.001;r.render(s,c);
+}
+an();
+addEventListener('resize',function(){c.aspect=innerWidth/innerHeight;c.updateProjectionMatrix();r.setSize(innerWidth,innerHeight);});
+})();
+</script>
+<script>
+(function(){
+var btn=document.getElementById('startBtn');
+if(btn)btn.addEventListener('click',function(){if(window.__lt&&window.__lt.router)window.__lt.router.navigate('home');});
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&window.__lt&&window.__lt.router&&window.__lt.router.currentRoute==='start'){e.preventDefault();window.__lt.router.navigate('home');}});
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target);}});},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal-el').forEach(function(el,i){el.style.transitionDelay=(i%4)*0.06+'s';io.observe(el);});
+})();
+</script>

@@ -7,6 +7,7 @@ import { WeightedRandom } from './weighted-random.js';
 import { ErrorBook } from './error-book.js';
 import { TemplateGen } from './template-gen.js';
 import { showToast } from '../../utils/toast.js';
+import { decryptApiKey, getDevicePassword } from '../../utils/crypto.js';
 
 export class QuizCore {
   constructor() {
@@ -15,10 +16,13 @@ export class QuizCore {
     this.questionSets = {};       // { setId: { name, questions[] } }
     this.currentSetId = null;
     this.currentIndex = 0;
+    this.currentQuestion = null;  // Track current question object (for weighted-random)
     this.answers = [];
     this.startTime = null;
     this.isSessionActive = false;
     this.timerInterval = null;
+    this._roundQuestionsAnswered = 0;
+    this._roundQuestionsTotal = 0;
 
     this.modes = {
       'sequential': new Sequential(),
@@ -40,6 +44,11 @@ export class QuizCore {
     const { route, state } = e.detail;
     this.state = state;
 
+    // Cleanup active session when navigating away from quiz-session
+    if (route !== 'quiz-session' && this.isSessionActive) {
+      this._endQuiz();
+    }
+
     if (route === 'quiz') {
       this._setupQuizHome();
     } else if (route === 'quiz-session') {
@@ -52,6 +61,93 @@ export class QuizCore {
     requestAnimationFrame(() => {
       this._bindQuizHomeEvents();
       this._renderQuestionSetList();
+      this._bindAiConversion();
+    });
+  }
+
+  _bindAiConversion() {
+    const aiInput = document.getElementById('quizAiFileInput');
+    const aiBtn = document.getElementById('quizAiConvertBtn');
+    const aiStatus = document.getElementById('quizAiStatus');
+
+    if (!aiInput || !aiBtn) return;
+
+    aiBtn.addEventListener('click', () => aiInput.click());
+    aiInput.addEventListener('change', async () => {
+      const file = aiInput.files[0];
+      if (!file) return;
+
+      // Get user AI config
+      var models = [];
+      try { models = JSON.parse(localStorage.getItem('paperlens_models') || '[]'); } catch(e) {}
+      var model = models.find(function(m) { return m.default; }) || models[0];
+
+      if (aiStatus) aiStatus.innerHTML = '<span style=\"color:var(--color-info);\">AI analyzing document, generating quiz...</span>';
+      if (aiBtn) aiBtn.disabled = true;
+
+      try {
+        var text = '';
+        var ext = file.name.split('.').pop().toLowerCase();
+
+        if (ext === 'json') {
+          // JSON: read client-side, try parsing
+          text = await this._readFile(file);
+          try { JSON.parse(text); } catch(e) { /* raw text is fine for AI */ }
+        } else if (ext === 'pdf' || ext === 'docx') {
+          var fd = new FormData(); fd.append('file', file);
+          var resp = await fetch('/api/files/upload', { method: 'POST', body: fd });
+          if (!resp.ok) throw new Error('File parsing failed');
+          var data = await resp.json();
+          text = data.text || '';
+        } else {
+          text = await this._readFile(file);
+        }
+
+        if (!text || !text.trim()) throw new Error('Could not extract text from file');
+
+        // Build request with user's provider config
+        var body = { text: text, filename: file.name };
+        if (model && model.apiKey) {
+          var key = model.apiKey;
+          try { key = await decryptApiKey(key, getDevicePassword()); } catch(e) { /* plaintext fallback */ }
+          body.providerConfig = { provider: model.provider, apiKey: key, baseUrl: model.baseUrl, model: model.model };
+        }
+
+        var aiResp = await fetch('/api/ai/convert-to-quiz', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        if (!aiResp.ok) {
+          var err = await aiResp.json().catch(function() { return {}; });
+          throw new Error(err.error || 'AI conversion failed');
+        }
+
+        var result = await aiResp.json();
+        if (result.success && result.questions) {
+          var setId = this._generateSetId(file.name);
+          var name = file.name.replace(/\.\w+$/, '');
+          this.questionSets[setId] = { name: name, questions: result.questions };
+          this._renderQuestionSetList();
+
+          var fileNameEl = document.getElementById('quizFileName');
+          var fileInfoEl = document.getElementById('quizFileInfo');
+          var questionCountEl = document.getElementById('quizQuestionCount');
+          if (fileNameEl) fileNameEl.textContent = name + ' (AI)';
+          if (fileInfoEl) fileInfoEl.style.display = 'flex';
+          if (questionCountEl) questionCountEl.textContent = result.questions.length + ' questions';
+          showToast('AI generated ' + result.count + ' questions', 'success');
+          var startBtn = document.getElementById('quizStartBtn');
+          if (startBtn) { startBtn.disabled = false; startBtn.textContent = 'Start Quiz'; }
+        }
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        if (aiStatus) aiStatus.innerHTML = '';
+        if (aiBtn) aiBtn.disabled = false;
+        aiInput.value = '';
+      }
     });
   }
 
@@ -213,36 +309,50 @@ export class QuizCore {
   }
 
   _renderQuestionSetList() {
-    const list = document.getElementById('quizSetList');
-    const select = document.getElementById('quizSetSelect');
-    if (!list && !select) return;
+    var list = document.getElementById('quizSetList');
+    if (!list) return;
+    var ids = Object.keys(this.questionSets);
 
-    const ids = Object.keys(this.questionSets);
-
-    if (list) {
-      if (ids.length === 0) {
-        list.innerHTML = `<div class="empty-hint">暂无题库，请上传题库文件</div>`;
-      } else {
-        list.innerHTML = ids.map(id => {
-          const set = this.questionSets[id];
-          return `<div class="quiz-set-item" data-set-id="${id}">
-            <span class="quiz-set-name">${this._escapeHtml(set.name)}</span>
-            <span class="quiz-set-count">${set.questions.length} 题</span>
-          </div>`;
-        }).join('');
-      }
+    if (ids.length === 0) {
+      list.innerHTML = '<div style=\"font-size:var(--text-sm); color:var(--color-text-tertiary); padding:var(--space-4); text-align:center;\">No question sets loaded.</div>';
+      return;
     }
 
-    if (select) {
-      if (ids.length === 0) {
-        select.innerHTML = `<option value="">-- 请先加载题库 --</option>`;
-      } else {
-        select.innerHTML = ids.map(id => {
-          const set = this.questionSets[id];
-          return `<option value="${id}">${this._escapeHtml(set.name)} (${set.questions.length}题)</option>`;
-        }).join('');
-      }
-    }
+    var self = this;
+    list.innerHTML = ids.map(function(id) {
+      var set = self.questionSets[id];
+      var active = self.currentSetId === id ? ' style=\"border-color:var(--color-accent);\"' : '';
+      return '<div class=\"card\"' + active + ' data-set-id=\"' + id + '\" style=\"display:flex;align-items:center;justify-content:space-between;padding:var(--space-3) var(--space-4);cursor:pointer;margin-bottom:var(--space-2);\">' +
+        '<div style=\"flex:1;min-width:0;\"><span style=\"font-size:var(--text-sm);font-weight:var(--weight-medium);color:var(--color-text-primary);\">' + self._escapeHtml(set.name) + '</span><span style=\"font-size:var(--text-xs);color:var(--color-text-tertiary);margin-left:var(--space-2);\">' + set.questions.length + ' questions</span></div>' +
+        '<button class=\"btn btn-ghost btn-sm quiz-set-delete\" data-set-id=\"' + id + '\" style=\"color:var(--color-error);flex-shrink:0;\" title=\"Delete set\">&times;</button>' +
+        '</div>';
+    }).join('');
+
+    // Click to select
+    list.querySelectorAll('.card').forEach(function(card) {
+      card.addEventListener('click', function(e) {
+        if (e.target.closest('.quiz-set-delete')) return;
+        var id = card.dataset.setId;
+        self.currentSetId = id;
+        self._renderQuestionSetList();
+        var startBtn = document.getElementById('quizStartBtn');
+        if (startBtn) { startBtn.disabled = false; startBtn.textContent = 'Start Quiz'; }
+      });
+    });
+
+    // Delete
+    list.querySelectorAll('.quiz-set-delete').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var id = btn.dataset.setId;
+        if (confirm('Delete question set \"' + (self.questionSets[id]?.name || id) + '\"?')) {
+          delete self.questionSets[id];
+          if (self.currentSetId === id) self.currentSetId = null;
+          self._renderQuestionSetList();
+          showToast('Set deleted', 'info');
+        }
+      });
+    });
   }
 
   _showTemplate() {
@@ -324,6 +434,13 @@ export class QuizCore {
     if (modal && body) {
       body.textContent = msg;
       modal.style.display = 'flex';
+      // Wire close button
+      const closeBtn = document.getElementById('quizErrorClose');
+      if (closeBtn) {
+        closeBtn.onclick = () => { modal.style.display = 'none'; };
+      }
+      // Close on overlay click
+      modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
     } else {
       showToast(msg, 'error', 5000);
     }
@@ -353,9 +470,14 @@ export class QuizCore {
     this.currentMode = mode;
     this.questions = [...set.questions];  // shallow copy — quiz modes may reorder
     this.currentIndex = 0;
+    this.currentQuestion = null;
     this.answers = [];
     this.startTime = Date.now();
     this.isSessionActive = true;
+    this._optionsDelegated = false;
+    this._roundQuestionsAnswered = 0;
+    this._roundQuestionsTotal = this.questions.length;
+    this._currentNavIndex = 0;
 
     // Initialize sub-mode
     const progressData = this._getProgressData();
@@ -366,6 +488,7 @@ export class QuizCore {
         this.modes['weighted-random'] = new WeightedRandom(settings);
       }
       this.modes['weighted-random'].initRound(this.questions, progressData);
+      this._roundQuestionsTotal = this.modes['weighted-random'].getEligibleCount();
     } else if (mode === 'error-book') {
       const errorQuestions = this.modes['error-book'].getErrorQuestions(this.questions, progressData);
       if (errorQuestions.length === 0) {
@@ -374,8 +497,15 @@ export class QuizCore {
         return;
       }
       this.questions = errorQuestions;
+      this._roundQuestionsTotal = this.questions.length;
     }
-    // sequential mode needs no special init
+
+    // Set initial current question
+    if (mode === 'weighted-random') {
+      this.currentQuestion = this.modes['weighted-random'].getNextQuestion(this.questions, progressData);
+    } else if (mode === 'sequential' || mode === 'error-book') {
+      this.currentQuestion = this.questions[0];
+    }
 
     // Navigate to session page
     if (window.__lt && window.__lt.router) {
@@ -388,7 +518,7 @@ export class QuizCore {
   submitAnswer(selectedOption) {
     if (!this.isSessionActive) return null;
 
-    const question = this._getCurrentQuestionObj();
+    const question = this.currentQuestion || this._getCurrentQuestionObj();
     if (!question) return null;
 
     const isCorrect = (selectedOption === question.answer);
@@ -400,22 +530,48 @@ export class QuizCore {
       selectedOption,
       correctOption: question.answer,
       isCorrect,
+      skipped: false,
       timeSpent,
-      timestamp: now
+      timestamp: now,
+      _navIndex: this._currentNavIndex,
+      _question: question,
+      explanation: question.explanation || ''
     });
 
-    // Update progress for weighted-random and error-book modes
+    // Update progress for all modes
     const progressData = this._getProgressData();
     const qProgress = progressData[question.id] || this._initQuestionProgress();
 
+    // Ensure qProgress is attached to progressData (for first-time questions)
+    if (!progressData[question.id]) {
+      progressData[question.id] = qProgress;
+    }
+
     if (this.currentMode === 'weighted-random') {
       this.modes['weighted-random'].updateAfterAnswer(question.id, isCorrect, progressData);
+    } else {
+      // Sequential and error-book: basic progress tracking
+      qProgress.totalAttempts = (qProgress.totalAttempts || 0) + 1;
+      if (isCorrect) {
+        qProgress.streak = (qProgress.streak || 0) + 1;
+      } else {
+        qProgress.wrongCount = (qProgress.wrongCount || 0) + 1;
+        qProgress.streak = 0;
+      }
+      qProgress.lastSeenAt = now;
+      // Update EMA
+      const result = isCorrect ? 1 : 0;
+      const emaAlpha = 0.4;
+      const prevEma = qProgress.ema !== undefined ? qProgress.ema : 0.5;
+      qProgress.ema = emaAlpha * result + (1 - emaAlpha) * prevEma;
     }
 
     if (this.currentMode === 'error-book') {
       const settings = this.state ? this.state.settings : {};
       this.modes['error-book'].checkAutoRemove(question.id, progressData, settings);
     }
+
+    this._roundQuestionsAnswered++;
 
     // Save progress
     this._saveProgressData(progressData);
@@ -438,19 +594,22 @@ export class QuizCore {
         this._endQuiz();
         return null;
       }
-      return this.questions[this.currentIndex];
+      this.currentQuestion = this.questions[this.currentIndex];
+      return this.currentQuestion;
     }
 
     if (this.currentMode === 'weighted-random') {
       const progressData = this._getProgressData();
       if (this.modes['weighted-random'].isRoundComplete()) {
         this.modes['weighted-random'].initRound(this.questions, progressData);
+        this._roundQuestionsTotal = this.modes['weighted-random'].getEligibleCount();
       }
       const next = this.modes['weighted-random'].getNextQuestion(this.questions, progressData);
       if (!next) {
         this._endQuiz();
         return null;
       }
+      this.currentQuestion = next;
       return next;
     }
 
@@ -460,7 +619,8 @@ export class QuizCore {
         this._endQuiz();
         return null;
       }
-      return this.questions[this.currentIndex];
+      this.currentQuestion = this.questions[this.currentIndex];
+      return this.currentQuestion;
     }
 
     return null;
@@ -469,19 +629,22 @@ export class QuizCore {
   getResults() {
     const total = this.answers.length;
     const correct = this.answers.filter(a => a.isCorrect).length;
+    const skipped = this.answers.filter(a => a.skipped).length;
+    const wrong = total - correct - skipped;
+    const attempted = total - skipped;
     const totalTime = this.startTime ? (Date.now() - this.startTime) / 1000 : 0;
-    const avgTime = total > 0 ? totalTime / total : 0;
+    const avgTime = attempted > 0 ? totalTime / attempted : 0;
 
-    // Per-question breakdown
     const questionResults = this.answers.map(a => {
       const q = this.questions.find(q => q.id === a.questionId) || this._findInAllSets(a.questionId);
       return {
         questionId: a.questionId,
-        question: q ? q.question : '(未知题目)',
+        question: q ? q.question : '(unknown)',
         selectedOption: a.selectedOption,
         correctOption: a.correctOption,
         isCorrect: a.isCorrect,
-        explanation: q ? q.explanation || '' : '',
+        skipped: a.skipped || false,
+        explanation: a.explanation || (q ? q.explanation || '' : ''),
         timeSpent: a.timeSpent
       };
     });
@@ -491,8 +654,9 @@ export class QuizCore {
       mode: this.currentMode,
       totalQuestions: total,
       correctCount: correct,
-      wrongCount: total - correct,
-      accuracy: total > 0 ? (correct / total * 100).toFixed(1) : '0.0',
+      wrongCount: wrong,
+      skippedCount: skipped,
+      accuracy: attempted > 0 ? (correct / attempted * 100).toFixed(1) : '0.0',
       totalTime,
       avgTime: avgTime.toFixed(1),
       questionResults
@@ -503,132 +667,310 @@ export class QuizCore {
   // Session Rendering
   // ---------------------------------------------------------------------------
   _bindSessionEvents() {
-    const optionBtns = document.querySelectorAll('.quiz-option');
-    optionBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (btn.disabled) return;
-        const optionIndex = parseInt(btn.dataset.option, 10);
-        this._handleAnswer(optionIndex);
+    // Event delegation for options
+    const optionsList = document.getElementById('quizOptionsList');
+    if (optionsList && !this._optionsDelegated) {
+      this._optionsDelegated = true;
+      optionsList.addEventListener('click', (e) => {
+        const btn = e.target.closest('.quiz-option');
+        if (!btn || btn.disabled) return;
+        this._handleAnswer(parseInt(btn.dataset.option, 10));
       });
+    }
+    // Keyboard 1-4
+    if (!this._keyHandler) {
+      this._keyHandler = (e) => {
+        if (!this.isSessionActive) return;
+        var k = parseInt(e.key, 10);
+        if (k >= 1 && k <= 4) this._handleAnswer(k - 1);
+      };
+      document.addEventListener('keydown', this._keyHandler);
+    }
+    // Navigation
+    document.getElementById('quizPrevBtn')?.addEventListener('click', () => this._navigateTo(this._currentNavIndex - 1));
+    document.getElementById('quizNextBtn')?.addEventListener('click', () => this._goNext());
+    document.getElementById('quizJumpBtn')?.addEventListener('click', () => {
+      var n = parseInt(document.getElementById('quizJumpInput')?.value) - 1;
+      if (!isNaN(n)) this._navigateTo(n);
+    });
+    document.getElementById('quizJumpInput')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('quizJumpBtn')?.click();
+    });
+    // Skip
+    document.getElementById('quizSkipBtn')?.addEventListener('click', () => this._skipCurrent());
+    // Redo
+    document.getElementById('quizRedoBtn')?.addEventListener('click', () => {
+      if (confirm('Restart this quiz? All current session answers will be lost.')) this._redoQuiz();
+    });
+    // Reset data
+    document.getElementById('quizResetBtn')?.addEventListener('click', () => {
+      if (confirm('Delete ALL progress data for this question set? This cannot be undone.')) this._resetData();
+    });
+  }
+
+  _goNext() {
+    if (!this._answerSubmitted && this._currentNavIndex >= this._roundQuestionsAnswered) {
+      showToast('请先回答当前题目或点击跳过', 'warning');
+      return;
+    }
+    var next = this._currentNavIndex + 1;
+    if (next >= this._getTotalQuestions()) {
+      this._renderResults();
+      return;
+    }
+    this._navigateTo(next);
+  }
+
+  _navigateTo(index) {
+    var total = this._getTotalQuestions();
+    if (index < 0 || index >= total) return;
+    this._currentNavIndex = index;
+
+    // Hide result area, reset answer state
+    var resultArea = document.getElementById('quizResultArea');
+    var reviewBanner = document.getElementById('quizReviewBanner');
+    var skipArea = document.getElementById('quizSkipArea');
+    if (resultArea) resultArea.style.display = 'none';
+    if (reviewBanner) reviewBanner.style.display = 'none';
+    document.querySelectorAll('.quiz-option').forEach(b => {
+      b.classList.remove('correct', 'incorrect', 'selected');
+      b.disabled = false;
     });
 
-    // Keyboard support (1-4 for options)
-    this._keyHandler = (e) => {
-      if (!this.isSessionActive) return;
-      const key = parseInt(e.key, 10);
-      if (key >= 1 && key <= 4) {
-        this._handleAnswer(key - 1);
+    // Check if already answered
+    var existing = this.answers.find(a => a._navIndex === index);
+    if (existing) {
+      // Show previous answer (read-only)
+      this._answerSubmitted = true;
+      this._renderQuestionAtIndex(index);
+      if (reviewBanner) {
+        reviewBanner.style.display = 'block';
+        if (existing.skipped) {
+          reviewBanner.style.background = 'var(--color-bg-elevated)';
+          reviewBanner.style.color = 'var(--color-text-tertiary)';
+          reviewBanner.textContent = 'Skipped';
+        } else {
+          reviewBanner.style.background = existing.isCorrect ? 'var(--color-success-bg)' : 'var(--color-error-bg)';
+          reviewBanner.style.color = existing.isCorrect ? 'var(--color-success)' : 'var(--color-error)';
+          reviewBanner.textContent = existing.isCorrect ? 'You got this correct' : 'You got this incorrect — correct answer: ' + String.fromCharCode(65 + existing.correctOption);
+        }
       }
-    };
-    document.addEventListener('keydown', this._keyHandler);
+      // Show the selected/correct highlights
+      document.querySelectorAll('.quiz-option').forEach(b => {
+        var oi = parseInt(b.dataset.option, 10);
+        b.disabled = true;
+        if (oi === existing.correctOption) b.classList.add('correct');
+        if (oi === existing.selectedOption && !existing.isCorrect && !existing.skipped) b.classList.add('incorrect');
+        if (oi === existing.selectedOption && existing.isCorrect) b.classList.add('correct');
+      });
+      if (existing.explanation) {
+        var explDiv = document.getElementById('quizExplanation');
+        var explText = document.getElementById('quizExplanationText');
+        if (explDiv && explText) { explText.textContent = existing.explanation; explDiv.style.display = 'block'; }
+      }
+    } else {
+      // New question
+      this._answerSubmitted = false;
+      this._renderQuestionAtIndex(index);
+      if (skipArea) skipArea.style.display = '';
+    }
+
+    // Update jump input
+    var jumpInput = document.getElementById('quizJumpInput');
+    if (jumpInput) { jumpInput.value = index + 1; jumpInput.max = total; }
+
+    // Update progress
+    var progressFill = document.getElementById('quizSessionProgress');
+    var counterEl = document.getElementById('quizSessionCounter');
+    if (progressFill) progressFill.style.width = ((index + 1) / total * 100).toFixed(0) + '%';
+    if (counterEl) counterEl.textContent = 'Q ' + (index + 1) + '/' + total;
+  }
+
+  _renderQuestionAtIndex(index) {
+    var total = this._getTotalQuestions();
+    if (index < 0 || index >= total) return;
+    this.currentIndex = index;
+
+    // For sequential/errorbook, get question directly
+    var q;
+    if (this.currentMode === 'weighted-random') {
+      // For weighted-random that uses sampling, we need the question from the answers record
+      var existing = this.answers.find(a => a._navIndex === index);
+      if (existing && existing._question) {
+        q = existing._question;
+      } else {
+        q = this.questions[index] || this.currentQuestion;
+      }
+    } else {
+      q = this.questions[index];
+    }
+    if (!q) return;
+    this.currentQuestion = q;
+
+    var questionEl = document.getElementById('quizQuestionText');
+    var optionsContainer = document.getElementById('quizOptionsList');
+    if (questionEl) questionEl.textContent = 'Q' + (index + 1) + '. ' + q.question;
+    if (optionsContainer && q.options) {
+      var labels = ['A', 'B', 'C', 'D'];
+      optionsContainer.innerHTML = q.options.map((opt, i) =>
+        '<button class="quiz-option" data-option="' + i + '"><span class="quiz-option-marker">' + labels[i] + '</span><span>' + this._escapeHtml(opt) + '</span></button>'
+      ).join('');
+    }
+  }
+
+  _skipCurrent() {
+    if (this._answerSubmitted) return;
+    var q = this.currentQuestion || this._getCurrentQuestionObj();
+    if (!q) return;
+    var idx = this._currentNavIndex;
+    // Record as skipped
+    this.answers.push({
+      questionId: q.id,
+      selectedOption: -1,
+      correctOption: q.answer,
+      isCorrect: false,
+      skipped: true,
+      timeSpent: 0,
+      timestamp: Date.now(),
+      _navIndex: idx,
+      _question: q,
+      explanation: q.explanation || ''
+    });
+    this._roundQuestionsAnswered++;
+    // Move to next
+    var next = idx + 1;
+    if (next >= this._getTotalQuestions()) {
+      this._renderResults();
+    } else {
+      this._navigateTo(next);
+    }
+  }
+
+  _redoQuiz() {
+    this.answers = [];
+    this._roundQuestionsAnswered = 0;
+    this._currentNavIndex = 0;
+    this.currentIndex = 0;
+    this.currentQuestion = null;
+    this._answerSubmitted = false;
+    this.isSessionActive = true;
+    var progressData = this._getProgressData();
+    if (this.currentMode === 'weighted-random') {
+      this.modes['weighted-random'].reset();
+      this.modes['weighted-random'].initRound(this.questions, progressData);
+      this._roundQuestionsTotal = this.modes['weighted-random'].getEligibleCount();
+      this.currentQuestion = this.modes['weighted-random'].getNextQuestion(this.questions, progressData);
+    } else if (this.currentMode === 'error-book') {
+      this.currentQuestion = this.questions[0];
+    } else {
+      this.currentQuestion = this.questions[0];
+    }
+    document.getElementById('quizResultArea') && (document.getElementById('quizResultArea').style.display = 'none');
+    document.getElementById('quizReviewBanner') && (document.getElementById('quizReviewBanner').style.display = 'none');
+    document.getElementById('quizSessionStats') && (document.getElementById('quizSessionStats').style.display = 'none');
+    document.getElementById('quizSessionEndMsg') && (document.getElementById('quizSessionEndMsg').style.display = 'none');
+    this._renderCurrentQuestion();
+  }
+
+  _resetData() {
+    if (this.state && this.state.quizProgress && this.currentSetId) {
+      delete this.state.quizProgress[this.currentSetId];
+      this.state.saveToStorage();
+    }
+    showToast('Progress data reset', 'info');
+    this._redoQuiz();
   }
 
   async _handleAnswer(optionIndex) {
     if (this._answerSubmitted) return;
     this._answerSubmitted = true;
-
-    // Disable options
     document.querySelectorAll('.quiz-option').forEach(b => b.disabled = true);
 
-    const result = this.submitAnswer(optionIndex);
-
-    // Highlight correct/incorrect
-    const options = document.querySelectorAll('.quiz-option');
+    var result = this.submitAnswer(optionIndex);
+    var options = document.querySelectorAll('.quiz-option');
     options.forEach(btn => {
-      const idx = parseInt(btn.dataset.option, 10);
+      var idx = parseInt(btn.dataset.option, 10);
       if (idx === result.correctOption) btn.classList.add('correct');
       if (idx === optionIndex && !result.isCorrect) btn.classList.add('incorrect');
     });
 
-    // Show result feedback
-    const resultArea = document.getElementById('quizResultArea');
-    const resultCorrect = document.getElementById('quizResultCorrect');
-    const resultIncorrect = document.getElementById('quizResultIncorrect');
-    const correctAnswerLabel = document.getElementById('quizCorrectAnswerLabel');
-    const explanationEl = document.getElementById('quizExplanationText');
-    const explanationDiv = document.getElementById('quizExplanation');
+    var resultArea = document.getElementById('quizResultArea');
+    var resultCorrect = document.getElementById('quizResultCorrect');
+    var resultIncorrect = document.getElementById('quizResultIncorrect');
+    var correctAnswerLabel = document.getElementById('quizCorrectAnswerLabel');
+    var explanationEl = document.getElementById('quizExplanationText');
+    var explanationDiv = document.getElementById('quizExplanation');
+    var skipArea = document.getElementById('quizSkipArea');
 
     if (resultArea) resultArea.style.display = 'block';
+    if (skipArea) skipArea.style.display = 'none';
     if (resultCorrect) resultCorrect.style.display = result.isCorrect ? 'block' : 'none';
     if (resultIncorrect) {
       resultIncorrect.style.display = result.isCorrect ? 'none' : 'block';
-      if (!result.isCorrect && correctAnswerLabel) {
-        correctAnswerLabel.textContent = '正确答案: ' + String.fromCharCode(65 + result.correctOption);
-      }
+      if (!result.isCorrect && correctAnswerLabel) correctAnswerLabel.textContent = 'Correct answer: ' + String.fromCharCode(65 + result.correctOption);
     }
     if (explanationEl && explanationDiv) {
-      explanationEl.textContent = result.explanation || '（无解析）';
+      explanationEl.textContent = result.explanation || '(no explanation)';
       explanationDiv.style.display = 'block';
     }
 
-    // Show next button
-    const nextBtn = document.getElementById('quizNextBtn');
-    if (nextBtn) {
-      nextBtn.style.display = 'inline-flex';
-      nextBtn.disabled = false;
-      nextBtn.onclick = () => {
-        // Hide result area
-        if (resultArea) resultArea.style.display = 'none';
-        if (resultCorrect) resultCorrect.style.display = 'none';
-        if (resultIncorrect) resultIncorrect.style.display = 'none';
-        if (explanationDiv) explanationDiv.style.display = 'none';
-        if (nextBtn) { nextBtn.style.display = 'none'; nextBtn.disabled = true; }
-
-        this._answerSubmitted = false;
-        document.querySelectorAll('.quiz-option').forEach(b => {
-          b.classList.remove('correct', 'incorrect');
-          b.disabled = false;
-        });
-
-        const next = this.getNextQuestion();
-        if (next) {
-          this._renderCurrentQuestion();
-        } else {
-          this._renderResults();
-        }
-      };
-    }
+    // Auto-advance after 1.5s
+    setTimeout(() => {
+      if (resultArea) resultArea.style.display = 'none';
+      if (resultCorrect) resultCorrect.style.display = 'none';
+      if (resultIncorrect) resultIncorrect.style.display = 'none';
+      if (explanationDiv) explanationDiv.style.display = 'none';
+      this._answerSubmitted = false;
+      document.querySelectorAll('.quiz-option').forEach(b => {
+        b.classList.remove('correct', 'incorrect');
+        b.disabled = false;
+      });
+      if (skipArea) skipArea.style.display = '';
+      this._currentNavIndex++;
+      var nextQ = this.getNextQuestion();
+      if (nextQ) {
+        this._renderCurrentQuestion();
+      } else {
+        this._renderResults();
+      }
+    }, 1500);
   }
 
   _renderCurrentQuestion() {
-    const q = this._getCurrentQuestionObj();
-    if (!q) {
-      this._renderResults();
-      return;
-    }
+    var q = this._getCurrentQuestionObj();
+    if (!q) { this._renderResults(); return; }
+    this.currentQuestion = q;
 
-    const questionEl = document.getElementById('quizQuestionText');
-    const optionsContainer = document.getElementById('quizOptionsList');
-    const progressFill = document.getElementById('quizSessionProgress');
-    const counterEl = document.getElementById('quizSessionCounter');
-    const modeEl = document.getElementById('quizSessionMode');
+    var idx = this._currentNavIndex;
+    var total = this._getTotalQuestions();
+    var questionEl = document.getElementById('quizQuestionText');
+    var optionsContainer = document.getElementById('quizOptionsList');
+    var progressFill = document.getElementById('quizSessionProgress');
+    var counterEl = document.getElementById('quizSessionCounter');
+    var modeEl = document.getElementById('quizSessionMode');
+    var skipArea = document.getElementById('quizSkipArea');
+    var reviewBanner = document.getElementById('quizReviewBanner');
 
-    if (questionEl) {
-      questionEl.textContent = `Q${this.currentIndex + 1}. ${q.question}`;
-    }
-
+    if (questionEl) questionEl.textContent = 'Q' + (idx + 1) + '. ' + q.question;
     if (optionsContainer && q.options) {
-      const labels = ['A', 'B', 'C', 'D'];
-      optionsContainer.innerHTML = q.options.map((opt, i) => `
-        <button class="quiz-option" data-option="${i}">
-          <span class="quiz-option-marker">${labels[i]}</span>
-          <span>${this._escapeHtml(opt)}</span>
-        </button>
-      `).join('');
+      var labels = ['A', 'B', 'C', 'D'];
+      optionsContainer.innerHTML = q.options.map((opt, i) =>
+        '<button class="quiz-option" data-option="' + i + '"><span class="quiz-option-marker">' + labels[i] + '</span><span>' + this._escapeHtml(opt) + '</span></button>'
+      ).join('');
     }
-
-    const total = this._getTotalQuestions();
-    if (progressFill) {
-      const percent = ((this.currentIndex + 1) / total * 100).toFixed(0);
-      progressFill.style.width = percent + '%';
-    }
-    if (counterEl) {
-      counterEl.textContent = `第 ${this.currentIndex + 1}/${total} 题`;
-    }
+    if (progressFill) progressFill.style.width = total > 0 ? ((idx + 1) / total * 100).toFixed(0) + '%' : '0%';
+    if (counterEl) counterEl.textContent = 'Q ' + (idx + 1) + '/' + total;
     if (modeEl) {
-      const modeNames = { 'sequential': '顺序刷题', 'weighted-random': '加权乱序', 'error-book': '错题本' };
+      var modeNames = { 'sequential': 'Sequential', 'weighted-random': 'Weighted', 'error-book': 'Error Book' };
       modeEl.textContent = modeNames[this.currentMode] || this.currentMode;
     }
+    if (skipArea) skipArea.style.display = '';
+    if (reviewBanner) reviewBanner.style.display = 'none';
+    if (document.getElementById('quizResultArea')) document.getElementById('quizResultArea').style.display = 'none';
+
+    // Update jump input
+    var jumpInput = document.getElementById('quizJumpInput');
+    if (jumpInput) { jumpInput.value = idx + 1; jumpInput.max = total; }
   }
 
   _renderResults() {
@@ -643,13 +985,15 @@ export class QuizCore {
 
     const results = this.getResults();
 
-    // Hide question area and result area
-    const questionArea = document.getElementById('quizQuestionArea');
-    const resultArea = document.getElementById('quizResultArea');
-    const nextBtn = document.getElementById('quizNextBtn');
+    // Hide question area, result area, skip, review banner
+    var questionArea = document.getElementById('quizQuestionArea');
+    var resultArea = document.getElementById('quizResultArea');
+    var skipArea = document.getElementById('quizSkipArea');
+    var reviewBanner = document.getElementById('quizReviewBanner');
     if (questionArea) questionArea.style.display = 'none';
     if (resultArea) resultArea.style.display = 'none';
-    if (nextBtn) nextBtn.style.display = 'none';
+    if (skipArea) skipArea.style.display = 'none';
+    if (reviewBanner) reviewBanner.style.display = 'none';
 
     // Show stats
     const statsDiv = document.getElementById('quizSessionStats');
@@ -660,14 +1004,18 @@ export class QuizCore {
     if (statsDiv) statsDiv.style.display = 'block';
     if (statCorrect) statCorrect.textContent = results.correctCount;
     if (statIncorrect) statIncorrect.textContent = results.wrongCount;
+    var statSkipped = document.getElementById('quizStatSkipped');
+    if (statSkipped) statSkipped.textContent = results.skippedCount || 0;
     if (statAccuracy) statAccuracy.textContent = results.accuracy + '%';
 
     // Show end message
     const endMsg = document.getElementById('quizSessionEndMsg');
     if (endMsg) endMsg.style.display = 'block';
 
-    // Auto-redirect after 5 seconds
+    // Auto-redirect after 5 seconds (only if still on quiz-session page)
+    const setId = this.currentSetId;
     setTimeout(() => {
+      if (this.currentSetId !== setId) return; // Session was replaced or user navigated away
       this._endQuiz();
       if (window.__lt && window.__lt.router) {
         window.__lt.router.navigate('quiz');
@@ -706,16 +1054,10 @@ export class QuizCore {
   // Helpers
   // ---------------------------------------------------------------------------
   _getCurrentQuestionObj() {
-    if (this.currentMode === 'weighted-random') {
-      // In weighted-random, the questions array IS the round pool
-      // getNextQuestion already returns the question, but here we just return
-      // whatever weighted-random's internal tracking points to
-      // For simplicity, fallback: the object directly from the pool
-      if (this.currentIndex < this.questions.length) {
-        return this.questions[this.currentIndex];
-      }
-      return null;
-    }
+    // Use tracked question object when available (set by getNextQuestion / render)
+    if (this.currentQuestion) return this.currentQuestion;
+
+    // Fallback for sequential/error-book mode
     if (this.currentIndex >= 0 && this.currentIndex < this.questions.length) {
       return this.questions[this.currentIndex];
     }
@@ -723,6 +1065,7 @@ export class QuizCore {
   }
 
   _getTotalQuestions() {
+    if (this._roundQuestionsTotal > 0) return this._roundQuestionsTotal;
     return this.questions.length;
   }
 

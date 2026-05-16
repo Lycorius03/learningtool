@@ -77,19 +77,30 @@ if exist "node_modules\dotenv"   (echo   dotenv          : OK) else (echo   [WAR
 echo.
 
 REM ---- 5. Port check ----
-echo [5/7] Port availability ...
+echo [5/7] Stopping previous instance ...
 set "PORT=3000"
 for /f "tokens=2 delims==" %%P in ('findstr /c:"PORT=" .env 2^>nul') do set "PORT=%%P"
-netstat -ano 2>nul | findstr /r ":%PORT% .*LISTENING" >nul 2>&1
-if !errorlevel! equ 0 (
-    echo   [WARN] Port %PORT% in use - killing ...
-    for /f "tokens=5" %%P in ('netstat -ano 2^>nul ^| findstr /r ":%PORT% .*LISTENING"') do (
-        taskkill /F /PID %%P >nul 2>&1
-    )
-    timeout /t 1 /nobreak >nul
-)
+if not exist "data\server.pid" goto :port_ok
+call :stop_pid
+:port_ok
 echo   Port %PORT% OK
 echo.
+goto :after_stop
+
+:stop_pid
+for /f "usebackq delims=" %%P in ("data\server.pid") do set "SPID=%%P"
+if "!SPID!"=="" exit /b
+tasklist /FI "PID eq !SPID!" 2>nul | find "!SPID!" >nul 2>&1
+if errorlevel 1 exit /b
+echo   Stopping previous instance (PID !SPID!)...
+taskkill /PID !SPID! >nul 2>&1
+timeout /t 2 /nobreak >nul
+tasklist /FI "PID eq !SPID!" 2>nul | find "!SPID!" >nul 2>&1
+if not errorlevel 1 taskkill /F /PID !SPID! >nul 2>&1
+del "data\server.pid" >nul 2>&1
+exit /b
+
+:after_stop
 
 REM ---- 6. Start server ----
 echo [6/7] Starting Node.js server ...
@@ -134,7 +145,22 @@ echo.
 set /p STOP=
 
 echo Shutting down ...
-taskkill /F /IM node.exe >nul 2>&1
+if not exist "data\server.pid" goto :shutdown_done
+call :kill_spid
+:shutdown_done
 echo Done.
+pause
+exit /b 0
+
+:kill_spid
+for /f "usebackq delims=" %%P in ("data\server.pid") do set "KPID=%%P"
+if "!KPID!"=="" exit /b
+echo   Stopping PID !KPID!...
+taskkill /PID !KPID! >nul 2>&1
+timeout /t 1 /nobreak >nul
+tasklist /FI "PID eq !KPID!" 2>nul | find "!KPID!" >nul 2>&1
+if not errorlevel 1 taskkill /F /PID !KPID! >nul 2>&1
+del "data\server.pid" >nul 2>&1
+exit /b
 pause
 exit /b 0

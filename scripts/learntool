@@ -1,0 +1,228 @@
+#!/bin/bash
+# ============================================================
+# LearningTool CLI — learntool
+# Usage: learntool [options]
+# ============================================================
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# ---- Defaults ----
+PORT=""
+DEV_MODE=false
+VERBOSE=false
+SKIP_ENV=false
+DETACH=false
+ACTION="start"
+
+# ---- Parse arguments ----
+show_help() {
+    cat <<'HELPEOF'
+LearningTool — 智能论文阅读 & 刷题工具
+
+用法:
+  learntool [选项]
+  learntool start    [选项]    启动服务器 (默认)
+  learntool stop               停止服务器
+  learntool status             查看服务器状态
+  learntool install            安装依赖
+  learntool docker-start       容器化启动
+  learntool docker-stop        容器化停止
+  learntool docker-build       构建容器镜像
+
+选项:
+  -p, --port <port>      指定端口 (默认: 3000)
+  -d, --dev              开发模式 (NODE_ENV=development)
+  -v, --verbose          详细日志模式
+  --skip-env             跳过 .env 文件检查
+  --detach               后台运行
+  -h, --help             显示此帮助信息
+
+示例:
+  learntool                          # 默认端口启动
+  learntool --port 8080              # 指定端口启动
+  learntool --dev --verbose          # 开发模式 + 详细日志
+  learntool start -p 8080 -v         # 等同于上面
+  learntool stop                     # 停止服务器
+  learntool status                   # 查看运行状态
+  learntool docker-start             # Docker 容器启动
+  learntool docker-build             # 构建 Docker 镜像
+
+环境变量 (.env 文件或环境):
+  PORT              服务端口
+  DEEPSEEK_API_KEY  DeepSeek API 密钥
+  SESSION_SECRET    会话加密密钥
+  NODE_ENV          运行环境 (development / production)
+HELPEOF
+    exit 0
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        start)       ACTION="start"; shift ;;
+        stop)        ACTION="stop"; shift ;;
+        status)      ACTION="status"; shift ;;
+        install)     ACTION="install"; shift ;;
+        docker-start) ACTION="docker-start"; shift ;;
+        docker-stop)  ACTION="docker-stop"; shift ;;
+        docker-build) ACTION="docker-build"; shift ;;
+        -p|--port)   PORT="$2"; shift 2 ;;
+        -d|--dev)    DEV_MODE=true; shift ;;
+        -v|--verbose) VERBOSE=true; shift ;;
+        --skip-env)  SKIP_ENV=true; shift ;;
+        --detach)    DETACH=true; shift ;;
+        -h|--help)   show_help ;;
+        *) echo "未知选项: $1"; echo "使用 --help 查看帮助"; exit 1 ;;
+    esac
+done
+
+cd "$PROJECT_DIR"
+
+# ---- Helper functions ----
+log()  { echo "[$(date '+%H:%M:%S')] $*"; }
+vlog() { if $VERBOSE || $DEV_MODE; then echo "[$(date '+%H:%M:%S.%3N')] [VERBOSE] $*"; fi; }
+err()  { echo "[$(date '+%H:%M:%S')] [ERROR] $*" >&2; }
+
+# ---- Actions ----
+case "$ACTION" in
+    stop)
+        log "Stopping LearningTool..."
+        PORT="${PORT:-3000}"
+        if command -v lsof &>/dev/null; then
+            PID=$(lsof -ti :$PORT -sTCP:LISTEN 2>/dev/null || true)
+            if [ -n "$PID" ]; then
+                kill $PID 2>/dev/null || true
+                log "Server on port $PORT stopped (PID: $PID)"
+            else
+                log "No server running on port $PORT"
+            fi
+        else
+            pkill -f "node server.js" 2>/dev/null || log "No server process found"
+        fi
+        ;;
+
+    status)
+        PORT="${PORT:-3000}"
+        log "Checking LearningTool status..."
+        if command -v lsof &>/dev/null; then
+            PID=$(lsof -ti :$PORT -sTCP:LISTEN 2>/dev/null || true)
+            if [ -n "$PID" ]; then
+                echo "  Status  : RUNNING"
+                echo "  Port    : $PORT"
+                echo "  PID     : $PID"
+                echo "  Command : $(ps -p $PID -o command= 2>/dev/null || echo 'N/A')"
+            else
+                echo "  Status  : STOPPED"
+            fi
+        elif command -v ss &>/dev/null; then
+            if ss -tlnp | grep -q ":$PORT "; then
+                echo "  Status  : RUNNING"
+                echo "  Port    : $PORT"
+                ss -tlnp | grep ":$PORT "
+            else
+                echo "  Status  : STOPPED"
+            fi
+        else
+            echo "  Status : UNKNOWN (install lsof or ss for better detection)"
+        fi
+        ;;
+
+    install)
+        log "Installing dependencies..."
+        vlog "Node.js: $(node -v)"
+        vlog "npm: $(npm -v)"
+        vlog "CWD: $(pwd)"
+        npm install
+        log "Dependencies installed."
+        ;;
+
+    docker-start)
+        log "Starting LearningTool via Docker Compose..."
+        if [ ! -f ".env" ] && [ "$SKIP_ENV" != true ]; then
+            if [ -f ".env.example" ]; then
+                cp .env.example .env
+                log ".env created from .env.example"
+            fi
+        fi
+        docker-compose up -d
+        docker-compose ps
+        log "LearningTool running at http://localhost:${PORT:-3000}"
+        ;;
+
+    docker-stop)
+        log "Stopping LearningTool Docker containers..."
+        docker-compose down
+        log "Containers stopped."
+        ;;
+
+    docker-build)
+        log "Building LearningTool Docker image..."
+        docker build -t learntool:latest .
+        log "Image built: learntool:latest"
+        ;;
+
+    start)
+        # Environment check
+        log "LearningTool Starting..."
+        vlog "Project dir: $PROJECT_DIR"
+        vlog "Node.js: $(node -v)"
+        vlog "npm: $(npm -v)"
+        vlog "OS: $(uname -s) $(uname -r) $(uname -m)"
+
+        # .env
+        if [ ! -f ".env" ] && [ "$SKIP_ENV" != true ]; then
+            if [ -f ".env.example" ]; then
+                cp .env.example .env
+                log ".env created from .env.example"
+            else
+                cat > .env <<'ENVEOF'
+PORT=3000
+DEEPSEEK_API_KEY=sk-your-key-here
+SESSION_SECRET=learningtool-dev-secret
+ENVEOF
+                log ".env created with defaults"
+            fi
+        fi
+
+        # Node modules
+        if [ ! -d "node_modules" ]; then
+            log "Installing dependencies..."
+            npm install
+        fi
+
+        # Set environment
+        if [ -n "$PORT" ]; then
+            export PORT="$PORT"
+            vlog "PORT override: $PORT"
+        fi
+        if $DEV_MODE; then
+            export NODE_ENV=development
+            vlog "NODE_ENV=development"
+        fi
+
+        if $VERBOSE; then
+            log "Verbose mode enabled"
+            echo ""
+            echo "  Project structure:"
+            echo "    JS   : $(find src/js -name '*.js' 2>/dev/null | wc -l) files"
+            echo "    CSS  : $(find src/css -name '*.css' 2>/dev/null | wc -l) files"
+            echo "    Views: $(find src/views -name '*.html' 2>/dev/null | wc -l) files"
+            echo ""
+        fi
+
+        log "Starting server on port ${PORT:-${PORT:-3000}}..."
+        echo ""
+
+        # Run
+        if $DETACH; then
+            nohup node server.js > /tmp/learntool.log 2>&1 &
+            PID=$!
+            log "Server started in background (PID: $PID)"
+            log "Logs: /tmp/learntool.log"
+            echo $PID > /tmp/learntool.pid
+        else
+            exec node server.js
+        fi
+        ;;
+esac

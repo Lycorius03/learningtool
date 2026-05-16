@@ -11,8 +11,14 @@ body {
   line-height: var(--leading-normal);
   color: var(--color-text-primary);
   background: var(--color-bg-base);
-  height: 100vh; overflow: hidden; cursor: none;
+  height: 100vh; overflow: hidden;
+  cursor: none;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body { cursor: auto; }
+  .cursor-dot { display: none !important; }
 }
 
 /* Noise — gemini-code style, 4% opacity */
@@ -21,14 +27,22 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Custom cursor — gemini-code V12 style */
+/* Custom cursor — spring-physics premium (size/color handled by JS) */
 .cursor-dot {
   position: fixed; width: 6px; height: 6px; background: var(--color-text-primary);
   border-radius: 50%; pointer-events: none; z-index: 10001;
-  will-change: transform, width, height, opacity;
-  transition: width 0.3s var(--ease-default), height 0.3s var(--ease-default), background 0.3s var(--ease-default), opacity 0.3s var(--ease-default);
+  will-change: transform, width, height;
+  /* No CSS transition — JS spring physics handles all motion */
+  mix-blend-mode: normal;
 }
-.cursor-dot.hover { width: 40px; height: 40px; background: var(--color-accent); opacity: 0.15; }
+.cursor-dot.hover {
+  /* JS controls hover state — CSS just provides the base */
+}
+
+/* Magnetic elements — smooth transform reset */
+.magnetic {
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
 
 /* Main */
 .main { height: 100vh; overflow: hidden; }
@@ -37,6 +51,7 @@ body {
   height: 100%; overflow-y: auto; overflow-x: hidden;
   scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
   scrollbar-width: thin; scrollbar-color: var(--color-border-default) transparent;
+  will-change: scroll-position;
 }
 
 .page-content-inner { padding: var(--space-8); max-width: 880px; margin: 0 auto; }
@@ -57,3 +72,135 @@ body {
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--color-border-default); border-radius: var(--radius-full); }
+
+/* ============================================================
+   LANGUAGE TOGGLE — EN/CN sliding pill, top-left
+   ============================================================ */
+.lang-toggle {
+  position: fixed; top: var(--space-4); left: var(--space-4);
+  z-index: 10001;
+  display: flex; align-items: center;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-full);
+  padding: 2px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--duration-slow) var(--ease-settle);
+  position: relative;
+}
+.lang-toggle:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.lang-option {
+  position: relative; z-index: 1;
+  padding: 3px 10px;
+  font-family: var(--font-sans);
+  font-size: 11px; font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  color: var(--color-text-tertiary);
+  transition: color var(--duration-base) var(--ease-settle);
+  user-select: none; white-space: nowrap;
+}
+.lang-option.active { color: var(--color-text-primary); }
+
+/* The sliding pill */
+.lang-pill {
+  position: absolute;
+  top: 2px; left: 2px;
+  height: calc(100% - 4px);
+  width: 32px;
+  background: var(--color-bg-white);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-xs);
+  transition: left var(--duration-slow) var(--ease-spring),
+              width var(--duration-slow) var(--ease-spring);
+  pointer-events: none;
+}
+.lang-toggle.cn .lang-pill { left: 34px; width: 38px; }
+
+/* ============================================================
+   SCROLL PROGRESS BAR — thin gradient line at top
+   ============================================================ */
+#scrollProgressBar {
+  position: fixed; top: 0; left: 0; height: 2px;
+  width: 0%; z-index: 10002; pointer-events: none;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-hover));
+  box-shadow: 0 0 8px var(--color-accent-subtle);
+  transition: width 80ms linear;
+}
+:root.dark #scrollProgressBar {
+  background: linear-gradient(90deg, var(--color-accent), #C07DFF, var(--color-error));
+}
+
+/* ============================================================
+   THEME TOGGLE — sun/moon animated switch, top-right
+   ============================================================ */
+.theme-toggle {
+  position: fixed; top: var(--space-4); right: var(--space-4);
+  z-index: 10000;
+  width: 44px; height: 44px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-border-default);
+  background: var(--color-bg-white);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--duration-slow) var(--ease-settle);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.theme-toggle:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+  transform: scale(1.05);
+}
+.theme-toggle:active { transform: scale(0.95); }
+
+.theme-toggle-track {
+  position: relative;
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.theme-icon {
+  position: absolute;
+  width: 18px; height: 18px;
+  transition: all var(--duration-slow) var(--ease-spring);
+  color: var(--color-text-secondary);
+}
+.theme-icon-sun {
+  opacity: 1; transform: rotate(0deg) scale(1);
+}
+.theme-icon-moon {
+  opacity: 0; transform: rotate(-90deg) scale(0.3);
+}
+
+/* Dark state: moon visible, sun hidden */
+.theme-toggle.dark .theme-icon-sun {
+  opacity: 0; transform: rotate(90deg) scale(0.3);
+}
+.theme-toggle.dark .theme-icon-moon {
+  opacity: 1; transform: rotate(0deg) scale(1);
+  color: #FFB340;
+}
+.theme-toggle.dark {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border-default);
+}
+
+/* Theme flash overlay — brief white/black flash during transition */
+.theme-flash {
+  position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+  background: transparent;
+  transition: background 0.15s var(--ease-exit);
+}
+.theme-flash.active {
+  background: rgba(255,255,255,0.12);
+  transition: background 0s;
+}
+:root.dark .theme-flash.active {
+  background: rgba(255,255,255,0.06);
+}
