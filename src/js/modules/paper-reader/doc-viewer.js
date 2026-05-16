@@ -16,6 +16,18 @@ export class DocViewer {
   // --- Public API ---
 
   /**
+   * Initialize or re-initialize the viewer with a container element or ID.
+   * @param {string|HTMLElement} el - container element or its ID
+   */
+  init(el) {
+    if (typeof el === 'string') {
+      this.container = document.getElementById(el);
+    } else {
+      this.container = el;
+    }
+  }
+
+  /**
    * Render full document text with optional annotation highlights.
    * @param {string} text  - Full document plain text
    * @param {Array}  [annotations=[]] - Annotations to apply

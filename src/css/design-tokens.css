@@ -34,8 +34,10 @@
   --color-info-bg:        #E8F0F6;
 
   /* --- TYPOGRAPHY --- */
-  --font-sans:  'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono:  'DM Mono', 'Fira Code', monospace;
+  --font-sans:    'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif:   'Playfair Display', 'Noto Serif SC', Georgia, serif;
+  --font-chinese: 'Noto Serif SC', 'STSong', 'SimSun', serif;
+  --font-mono:    'DM Mono', 'Fira Code', monospace;
 
   --text-xs:    0.75rem;
   --text-sm:    0.8125rem;
@@ -83,7 +85,7 @@
   --shadow-xl:  0 16px 40px rgba(26,24,22,0.12), 0 6px 16px rgba(26,24,22,0.08);
 
   /* --- TRANSITIONS --- */
-  --ease-default: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-default: cubic-bezier(0.19, 1, 0.22, 1);
   --ease-in:      cubic-bezier(0.4, 0, 1, 1);
   --ease-out:     cubic-bezier(0, 0, 0.2, 1);
   --ease-inout:   cubic-bezier(0.4, 0, 0.2, 1);

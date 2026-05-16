@@ -1,87 +1,85 @@
+<style>
+  @keyframes heroReveal { to { transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .hero-line { overflow: visible; margin-bottom: 4px; padding: 0.15em 0; }
+  .hero-line span {
+    display: block; font-family: var(--font-serif); font-size: clamp(2.8rem, 8vw, 5.5rem); font-weight: 400;
+    letter-spacing: -0.02em; line-height: 1.15; transform: translateY(115%);
+    animation: heroReveal 1.6s var(--ease-default) forwards;
+    color: var(--color-text-primary);
+  }
+  .hero-line:nth-child(2) span { animation-delay: 0.1s; }
+  .hero-line:nth-child(3) span { animation-delay: 0.2s; }
+
+  .hero-wrap { min-height: 62vh; display: flex; flex-direction: column; justify-content: center; padding: var(--space-10) 0; }
+  .hero-quote-wrap { position: relative; min-height: 3em; margin-top: var(--space-4); }
+  .hero-quote {
+    position: absolute; top: 0; left: 0; right: 0; opacity: 0;
+    font-family: var(--font-serif); font-size: var(--text-lg); font-style: italic;
+    color: var(--color-text-secondary); line-height: var(--leading-relaxed);
+    transition: opacity 1s var(--ease-default);
+  }
+  .hero-quote.visible { opacity: 1; }
+  .hero-quote.latin { font-style: italic; letter-spacing: 0.01em; }
+
+  .tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-2); opacity: 0; animation: fadeInUp 0.8s var(--ease-default) 0.9s forwards; margin-top: var(--space-10); }
+  .tool-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); cursor: pointer; transition: background 0.2s var(--ease-default); text-decoration: none; color: var(--color-text-primary); }
+  .tool-item:hover { background: var(--color-bg-surface); }
+  .tool-item-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .tool-item-text h4 { font-size: var(--text-base); font-weight: var(--weight-medium); margin: 0; }
+  .tool-item-text p { font-size: var(--text-xs); color: var(--color-text-tertiary); margin: 2px 0 0; }
+
+  .status-bar { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-8); opacity: 0; animation: fadeIn 0.8s var(--ease-default) 1.1s forwards; font-size: var(--text-xs); color: var(--color-text-tertiary); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-success); }
+</style>
+
 <div class="page-content-inner">
 
-  <!-- ==================== HERO SECTION ==================== -->
-  <section class="anim-fade-in-up" style="text-align:center; padding: var(--space-12) 0 var(--space-10);">
-    <div style="display:flex; align-items:center; justify-content:center; gap:var(--space-3); margin-bottom:var(--space-4);">
-      <div style="width:48px; height:48px; background:var(--color-text-primary); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; color:var(--color-bg-base); font-size:var(--text-xl); font-weight:var(--weight-semibold);">P</div>
-      <div>
-        <h1 style="font-size:var(--text-3xl); font-weight:var(--weight-semibold); color:var(--color-text-primary); line-height:1.2; margin:0;">PaperLens</h1>
-        <p style="font-size:var(--text-base); color:var(--color-text-secondary); margin:var(--space-1) 0 0;">智能论文阅读 &middot; 科学刷题</p>
-      </div>
+  <div class="hero-wrap">
+    <div class="hero-line"><span>Read deeper.</span></div>
+    <div class="hero-line"><span>Practice smarter.</span></div>
+    <div class="hero-line"><span>LearningTool.</span></div>
+    <div class="hero-quote-wrap">
+      <p class="hero-quote latin visible" id="quoteEl">Omnia, Lucili, aliena sunt; tempus tantum nostrum est.</p>
     </div>
-    <p style="max-width:480px; margin:0 auto; font-size:var(--text-sm); color:var(--color-text-tertiary); line-height:var(--leading-relaxed);">
-      导入论文，AI 助你深度理解；导入题库，智能算法帮你高效刷题。让学术更轻松。
-    </p>
-  </section>
-
-  <div class="divider"></div>
-
-  <!-- ==================== FEATURE CARDS ==================== -->
-  <section class="stagger-children" style="display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-4); margin-bottom:var(--space-8);">
-    <div class="card hover-lift" style="cursor:pointer;" data-route="reader" onclick="window.__paperlens?.router?.navigate('reader')">
-      <div class="card-body" style="text-align:center; padding:var(--space-4) 0;">
-        <div style="width:44px; height:44px; margin:0 auto var(--space-3); background:var(--color-accent-soft); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center;">
-          <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="var(--color-accent)" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M6 6h4M6 9h3" stroke-linecap="round"/></svg>
-        </div>
-        <h3 class="card-header" style="margin-bottom:var(--space-1); font-size:var(--text-lg);">论文阅读</h3>
-        <p style="font-size:var(--text-sm); color:var(--color-text-tertiary); line-height:var(--leading-snug);">导入 PDF/DOCX/TXT/MD，AI 逐段解析论文要点与术语</p>
-      </div>
-    </div>
-
-    <div class="card hover-lift" style="cursor:pointer;" data-route="quiz" onclick="window.__paperlens?.router?.navigate('quiz')">
-      <div class="card-body" style="text-align:center; padding:var(--space-4) 0;">
-        <div style="width:44px; height:44px; margin:0 auto var(--space-3); background:var(--color-success-bg); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center;">
-          <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="var(--color-success)" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5.5 7.5l2 2 3.5-3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <h3 class="card-header" style="margin-bottom:var(--space-1); font-size:var(--text-lg);">智能刷题</h3>
-        <p style="font-size:var(--text-sm); color:var(--color-text-tertiary); line-height:var(--leading-snug);">MFAW 加权乱序算法 + 错题本，科学提升学习效率</p>
-      </div>
-    </div>
-
-    <div class="card hover-lift">
-      <div class="card-body" style="text-align:center; padding:var(--space-4) 0;">
-        <div style="width:44px; height:44px; margin:0 auto var(--space-3); background:var(--color-info-bg); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center;">
-          <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="var(--color-info)" stroke-width="1.5"><circle cx="6" cy="6" r="1.5" fill="var(--color-info)"/><path d="M3 13c0-2 2.5-3.5 5-3.5s5 1.5 5 3.5" stroke-linecap="round"/><circle cx="8" cy="8" r="7"/></svg>
-        </div>
-        <h3 class="card-header" style="margin-bottom:var(--space-1); font-size:var(--text-lg);">AI 辅助</h3>
-        <p style="font-size:var(--text-sm); color:var(--color-text-tertiary); line-height:var(--leading-snug);">阅读中随时划词提问，AI 即时解答疑惑</p>
-      </div>
-    </div>
-  </section>
-
-  <div class="divider"></div>
-
-  <!-- ==================== QUICK START SUGGESTIONS ==================== -->
-  <section style="margin-bottom:var(--space-6);">
-    <h2 style="font-size:var(--text-md); font-weight:var(--weight-semibold); color:var(--color-text-primary); margin-bottom:var(--space-4);">快速开始</h2>
-    <div style="display:flex; flex-wrap:wrap; gap:var(--space-2);">
-      <button class="btn btn-secondary btn-sm" data-route="reader" onclick="window.__paperlens?.router?.navigate('reader')">
-        <svg style="width:14px;height:14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2v12l5-3 5 3V2a1 1 0 00-1-1H4a1 1 0 00-1 1z"/></svg>
-        导入论文开始阅读
-      </button>
-      <button class="btn btn-secondary btn-sm" data-route="quiz" onclick="window.__paperlens?.router?.navigate('quiz')">
-        <svg style="width:14px;height:14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5.5 7.5l2 2 3.5-3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        开始刷题
-      </button>
-      <button class="btn btn-secondary btn-sm" data-route="template" onclick="window.__paperlens?.router?.navigate('template')">
-        <svg style="width:14px;height:14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 7l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        查看题库模板
-      </button>
-      <button class="btn btn-secondary btn-sm" data-route="settings" onclick="window.__paperlens?.router?.navigate('settings')">
-        <svg style="width:14px;height:14px;" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1.5v1.5M8 13v1.5M3.5 3.5l1 1M11.5 11.5l1 1M1.5 8H3M13 8h1.5M3.5 12.5l1-1M11.5 4.5l1-1"/></svg>
-        配置 API 与设置
-      </button>
-    </div>
-  </section>
-
-  <!-- ==================== STATUS BAR ==================== -->
-  <div style="display:flex; align-items:center; gap:var(--space-4); padding:var(--space-4); background:var(--color-bg-surface); border-radius:var(--radius-lg); font-size:var(--text-sm); color:var(--color-text-secondary);">
-    <div style="display:flex; align-items:center; gap:var(--space-1);">
-      <span style="width:8px; height:8px; border-radius:var(--radius-full); background:var(--color-success); display:inline-block;"></span>
-      <span>系统就绪</span>
-    </div>
-    <span style="color:var(--color-border-strong);">|</span>
-    <span>支持格式: PDF &middot; DOCX &middot; TXT &middot; MD &middot; JSON</span>
   </div>
+
+  <div class="tools-grid">
+    <div class="tool-item" data-route="reader" onclick="window.__lt?.router?.navigate('reader')">
+      <div class="tool-item-icon" style="background:var(--color-accent-soft);color:var(--color-accent);">&#x1F4C4;</div>
+      <div class="tool-item-text"><h4>论文阅读</h4><p>导入 PDF / DOCX / TXT / MD，AI 逐段解析论文要点</p></div>
+    </div>
+    <div class="tool-item" data-route="quiz" onclick="window.__lt?.router?.navigate('quiz')">
+      <div class="tool-item-icon" style="background:var(--color-success-bg);color:var(--color-success);">&#x2713;</div>
+      <div class="tool-item-text"><h4>智能刷题</h4><p>加权乱序 · 错题本 · 顺序模式，自适应权重算法</p></div>
+    </div>
+    <div class="tool-item" data-route="template" onclick="window.__lt?.router?.navigate('template')">
+      <div class="tool-item-icon" style="background:var(--color-info-bg);color:var(--color-info);">{ }</div>
+      <div class="tool-item-text"><h4>题库模板</h4><p>JSON 格式模板下载，选择题 + 解析，导入即用</p></div>
+    </div>
+    <div class="tool-item" data-route="settings" onclick="window.__lt?.router?.navigate('settings')">
+      <div class="tool-item-icon" style="background:var(--color-bg-elevated);">&#x2699;</div>
+      <div class="tool-item-text"><h4>设置</h4><p>API Key 管理 · MFAW 算法参数 · 主题偏好</p></div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span class="status-dot"></span> 系统就绪 &middot; PDF &middot; DOCX &middot; TXT &middot; MD &middot; JSON
+  </div>
+
+<script>
+(function() {
+  var quotes = ['Omnia, Lucili, aliena sunt; tempus tantum nostrum est.','To strive, to seek, to find, and not to yield.'];
+  var el = document.getElementById('quoteEl');
+  var i = 0;
+  if (!el) return;
+  setInterval(function() {
+    el.style.opacity = '0';
+    setTimeout(function() { i = (i + 1) % 2; el.textContent = quotes[i]; el.style.opacity = '1'; }, 1000);
+  }, 5000);
+})();
+</script>
 
 </div>

@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LearningTool — 智能论文阅读 & 刷题</title>
+  <title>LearningTool</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="src/css/design-tokens.css" />
   <link rel="stylesheet" href="src/css/animations.css" />
   <link rel="stylesheet" href="src/css/shell.css" />
@@ -14,105 +14,29 @@
 </head>
 <body>
 
-<div class="app-shell" id="appShell">
+<div class="noise-overlay"></div>
+<div class="cursor-dot" id="cursorDot"></div>
 
-  <!-- ==================== SIDEBAR ==================== -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="brand" data-route="home" title="PaperLens Home">
-        <div class="brand-icon">L</div>
-        LearningTool
-      </div>
-    </div>
+<main class="main">
+  <div class="page-content" id="pageContent"></div>
+</main>
 
-    <nav class="sidebar-nav" id="sidebarNav">
-      <div class="nav-section-label">功能</div>
-
-      <div class="nav-item active" data-route="home">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M2 4h12M2 8h12M2 12h12" stroke-linecap="round"/>
-        </svg>
-        <span class="nav-item-text">首页</span>
-      </div>
-
-      <div class="nav-item" data-route="reader">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-          <rect x="2" y="2" width="12" height="12" rx="2"/><path d="M6 6h4M6 9h3" stroke-linecap="round"/>
-        </svg>
-        <span class="nav-item-text">论文阅读</span>
-      </div>
-
-      <div class="nav-item" data-route="quiz">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="8" cy="8" r="6"/><path d="M5.5 7.5l2 2 3.5-3.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="nav-item-text">刷题</span>
-      </div>
-
-      <div class="nav-section-label">工具</div>
-
-      <div class="nav-item" data-route="template">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-          <rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 7l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="nav-item-text">题库模板</span>
-      </div>
-
-      <div class="nav-item" data-route="settings">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="8" cy="8" r="2.5"/><path d="M8 1.5v1.5M8 13v1.5M3.5 3.5l1 1M11.5 11.5l1 1M1.5 8H3M13 8h1.5M3.5 12.5l1-1M11.5 4.5l1-1"/>
-        </svg>
-        <span class="nav-item-text">设置</span>
-      </div>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="user-row" id="userRow">
-        <div class="avatar" id="userAvatar">U</div>
-        <span class="user-name" id="userNameDisplay">未登录</span>
-      </div>
-    </div>
-  </aside>
-
-  <!-- ==================== MAIN ==================== -->
-  <main class="main">
-    <div class="topbar">
-      <div class="topbar-left">
-        <span class="topbar-title" id="topbarTitle">首页</span>
-      </div>
-      <div class="topbar-actions">
-        <div class="model-badge" id="modelBadge" style="display:none;">
-          <span class="model-dot"></span>
-          <span id="modelName">DeepSeek-v4-flash</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="page-content" id="pageContent">
-      <!-- Dynamic page content rendered here -->
-    </div>
-  </main>
-
-</div>
-
-<!-- Toast container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Admin login modal (hidden) -->
 <div class="modal-overlay" id="adminModal" style="display:none;">
   <div class="modal">
-    <h3 class="modal-title">管理员验证</h3>
+    <h3 class="modal-title">Sign In</h3>
     <div class="form-group">
-      <label class="form-label">账号</label>
-      <input class="form-input" type="text" id="adminUsername" placeholder="输入管理员账号" />
+      <label class="form-label">Username</label>
+      <input class="form-input" type="text" id="adminUsername" placeholder="Username" />
     </div>
     <div class="form-group">
-      <label class="form-label">密码</label>
-      <input class="form-input" type="password" id="adminPassword" placeholder="输入管理员密码" />
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="adminPassword" placeholder="Password" />
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="adminCancel">取消</button>
-      <button class="btn btn-accent" id="adminSubmit">验证</button>
+      <button class="btn btn-ghost" id="adminCancel">Cancel</button>
+      <button class="btn btn-accent" id="adminSubmit">Sign In</button>
     </div>
   </div>
 </div>

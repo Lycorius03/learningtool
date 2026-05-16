@@ -24,6 +24,18 @@ app.use(session({
   }
 }));
 
+// --- Request logger (debug) ---
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const ms = Date.now() - start;
+    if (req.path.startsWith('/src/') || req.path.startsWith('/api/')) {
+      console.log(`[${res.statusCode}] ${req.method} ${req.path} → ${res.get('Content-Type') || 'none'} (${ms}ms)`);
+    }
+  });
+  next();
+});
+
 // --- Static files (frontend) ---
 app.use(express.static(path.join(__dirname)));
 

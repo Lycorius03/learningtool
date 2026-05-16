@@ -2,7 +2,7 @@
  * PaperLens — Admin Entrance (hidden keyboard chord detector)
  * Triggers on Ctrl+Shift+Alt+E, shows login modal.
  */
-import { showToast } from '../utils/toast.js';
+import { showToast } from '../../utils/toast.js';
 
 export class AdminEntrance {
   constructor(state) {
@@ -24,15 +24,10 @@ export class AdminEntrance {
     const modal = document.getElementById('adminModal');
     const cancelBtn = document.getElementById('adminCancel');
     const submitBtn = document.getElementById('adminSubmit');
+    if (!modal || !cancelBtn || !submitBtn) return;
 
-    cancelBtn.addEventListener('click', () => {
-      modal.style.display = 'none';
-    });
-
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.style.display = 'none';
-    });
-
+    cancelBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
     submitBtn.addEventListener('click', () => this._handleLogin());
   }
 

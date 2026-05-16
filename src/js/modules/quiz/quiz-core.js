@@ -42,7 +42,7 @@ export class QuizCore {
 
     if (route === 'quiz') {
       this._setupQuizHome();
-    } else if (route === 'quiz/session') {
+    } else if (route === 'quiz-session') {
       this._setupQuizSession();
     }
   }
@@ -58,14 +58,14 @@ export class QuizCore {
   _setupQuizSession() {
     if (!this.isSessionActive) {
       // If no active session, redirect back
-      if (window.__paperlens && window.__paperlens.router) {
-        window.__paperlens.router.navigate('quiz');
+      if (window.__lt && window.__lt.router) {
+        window.__lt.router.navigate('quiz');
       }
       return;
     }
     requestAnimationFrame(() => {
-      this._bindSessionEvents();
       this._renderCurrentQuestion();
+      this._bindSessionEvents();
     });
   }
 
@@ -74,53 +74,142 @@ export class QuizCore {
   // ---------------------------------------------------------------------------
   _bindQuizHomeEvents() {
     const fileInput = document.getElementById('quizFileInput');
-    const loadBtn = document.getElementById('quizLoadBtn');
+    const selectBtn = document.getElementById('quizSelectBtn');
     const startBtn = document.getElementById('quizStartBtn');
-    const modeSelect = document.getElementById('quizModeSelect');
-    const setSelect = document.getElementById('quizSetSelect');
-    const templateBtn = document.getElementById('quizTemplateBtn');
-
-    if (fileInput && loadBtn) {
-      loadBtn.addEventListener('click', () => {
-        const file = fileInput.files[0];
-        if (!file) {
-          showToast('请先选择题库文件', 'warning');
-          return;
-        }
-        this.loadQuestions(file);
-      });
-    }
-
-    if (startBtn) {
-      startBtn.addEventListener('click', () => {
-        const setId = setSelect ? setSelect.value : null;
-        const mode = modeSelect ? modeSelect.value : 'sequential';
-
-        if (!setId || !this.questionSets[setId]) {
-          showToast('请先加载题库', 'warning');
-          return;
-        }
-        this.startQuiz(setId, mode);
-      });
-    }
-
-    if (templateBtn) {
-      templateBtn.addEventListener('click', () => {
-        this._showTemplate();
-      });
-    }
-
-    // Drag-and-drop support
     const dropZone = document.getElementById('quizDropZone');
-    if (dropZone) {
-      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); });
-      dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const file = e.dataTransfer.files[0];
-        if (fileInput) { fileInput.files = e.dataTransfer.files; }
-        this.loadQuestions(file);
+    const fileInfo = document.getElementById('quizFileInfo');
+    const fileName = document.getElementById('quizFileName');
+    const questionCount = document.getElementById('quizQuestionCount');
+    const clearBtn = document.getElementById('quizClearFile');
+    const modeHint = document.getElementById('quizModeHint');
+
+    // Default mode
+    this.currentMode = 'weighted-random';
+
+    // Mode card clicks
+    document.querySelectorAll('.quiz-mode-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.quiz-mode-card').forEach(c => c.style.borderColor = '');
+        card.style.borderColor = 'var(--color-accent)';
+        const rawMode = card.dataset.mode;
+        this.currentMode = rawMode === 'wrongbook' ? 'error-book' : rawMode === 'weighted' ? 'weighted-random' : rawMode;
+        if (modeHint) modeHint.innerHTML = 'Current mode: <strong style="color:var(--color-accent);">' + card.querySelector('.card-header').textContent + '</strong>';
+      });
+    });
+
+    // Select file button → trigger hidden input
+    if (selectBtn && fileInput) {
+      selectBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+      dropZone?.addEventListener('click', (e) => {
+        // Skip if the click came from the file input itself (programmatic click bubbles)
+        if (e.target === fileInput) return;
+        fileInput.click();
       });
     }
+
+    // File selected → load
+    if (fileInput) {
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (file) {
+          this.loadQuestions(file);
+          if (fileName) fileName.textContent = file.name;
+          if (fileInfo) fileInfo.style.display = 'flex';
+        }
+      });
+    }
+
+    // Drag and drop
+    if (dropZone) {
+      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault(); dropZone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+          if (fileInput) fileInput.files = e.dataTransfer.files;
+          this.loadQuestions(file);
+          if (fileName) fileName.textContent = file.name;
+          if (fileInfo) fileInfo.style.display = 'flex';
+        }
+      });
+    }
+
+    // Clear file
+    clearBtn?.addEventListener('click', () => {
+      if (fileInput) fileInput.value = '';
+      if (fileInfo) fileInfo.style.display = 'none';
+      this.questionSets = {};
+      if (questionCount) questionCount.textContent = '0 questions';
+      updateStartBtn();
+    });
+
+    // Start quiz
+    const updateStartBtn = () => {
+      const ids = Object.keys(this.questionSets || {});
+      if (startBtn) {
+        startBtn.disabled = ids.length === 0;
+        startBtn.textContent = ids.length ? 'Start Quiz (' + Object.values(this.questionSets).reduce((s, qs) => s + qs.questions.length, 0) + ' questions)' : 'Import questions to start';
+      }
+    };
+
+    startBtn?.addEventListener('click', () => {
+      const ids = Object.keys(this.questionSets || {});
+      if (!ids.length) { showToast('Please import questions first', 'warning'); return; }
+      // Use the first (or only) question set
+      const setId = ids[0];
+      this.startQuiz(setId, this.currentMode || 'sequential');
+    });
+
+    // --- Quiz Settings: load from state and bind save ---
+    const wrongRepeatCb = document.getElementById('quizWrongRepeat');
+    const autoRemoveCb = document.getElementById('quizAutoRemove');
+    const roundCountEl = document.getElementById('quizRoundCount');
+    const roundDecBtn = document.getElementById('quizRoundDec');
+    const roundIncBtn = document.getElementById('quizRoundInc');
+
+    // Load saved settings from state
+    if (this.state) {
+      const s = this.state.settings || {};
+      if (wrongRepeatCb) wrongRepeatCb.checked = s.wrongRepeat !== false;
+      if (autoRemoveCb) autoRemoveCb.checked = s.autoRemoveErrorBook === true;
+      if (roundCountEl) roundCountEl.textContent = s.questionsPerRound || 20;
+    }
+
+    // Save on toggle change
+    wrongRepeatCb?.addEventListener('change', () => {
+      if (this.state) this.state.updateSettings({ wrongRepeat: wrongRepeatCb.checked });
+      showToast(wrongRepeatCb.checked ? '错题重复：开' : '错题重复：关', 'info');
+    });
+    autoRemoveCb?.addEventListener('change', () => {
+      if (this.state) this.state.updateSettings({ autoRemoveErrorBook: autoRemoveCb.checked });
+      showToast(autoRemoveCb.checked ? '自动移除已掌握：开' : '自动移除已掌握：关', 'info');
+    });
+
+    // Round count controls
+    roundDecBtn?.addEventListener('click', () => {
+      let n = parseInt(roundCountEl?.textContent) || 20;
+      n = Math.max(5, n - 5);
+      if (roundCountEl) roundCountEl.textContent = n;
+      if (this.state) this.state.updateSettings({ questionsPerRound: n });
+    });
+    roundIncBtn?.addEventListener('click', () => {
+      let n = parseInt(roundCountEl?.textContent) || 20;
+      n = Math.min(100, n + 5);
+      if (roundCountEl) roundCountEl.textContent = n;
+      if (this.state) this.state.updateSettings({ questionsPerRound: n });
+    });
+
+    // Override loadQuestions to update UI
+    const origLoad = this.loadQuestions.bind(this);
+    this.loadQuestions = async (file) => {
+      await origLoad(file);
+      if (questionCount) {
+        const ids = Object.keys(this.questionSets || {});
+        questionCount.textContent = ids.length ? Object.values(this.questionSets).reduce((s, qs) => s + qs.questions.length, 0) + ' questions' : '0 questions';
+      }
+      updateStartBtn();
+    };
   }
 
   _renderQuestionSetList() {
@@ -289,8 +378,8 @@ export class QuizCore {
     // sequential mode needs no special init
 
     // Navigate to session page
-    if (window.__paperlens && window.__paperlens.router) {
-      window.__paperlens.router.navigate('quiz/session');
+    if (window.__lt && window.__lt.router) {
+      window.__lt.router.navigate('quiz-session');
     }
 
     this._startTimer();
@@ -451,39 +540,53 @@ export class QuizCore {
       if (idx === optionIndex && !result.isCorrect) btn.classList.add('incorrect');
     });
 
-    // Show explanation
-    const explanationEl = document.getElementById('quizExplanation');
-    if (explanationEl) {
+    // Show result feedback
+    const resultArea = document.getElementById('quizResultArea');
+    const resultCorrect = document.getElementById('quizResultCorrect');
+    const resultIncorrect = document.getElementById('quizResultIncorrect');
+    const correctAnswerLabel = document.getElementById('quizCorrectAnswerLabel');
+    const explanationEl = document.getElementById('quizExplanationText');
+    const explanationDiv = document.getElementById('quizExplanation');
+
+    if (resultArea) resultArea.style.display = 'block';
+    if (resultCorrect) resultCorrect.style.display = result.isCorrect ? 'block' : 'none';
+    if (resultIncorrect) {
+      resultIncorrect.style.display = result.isCorrect ? 'none' : 'block';
+      if (!result.isCorrect && correctAnswerLabel) {
+        correctAnswerLabel.textContent = '正确答案: ' + String.fromCharCode(65 + result.correctOption);
+      }
+    }
+    if (explanationEl && explanationDiv) {
       explanationEl.textContent = result.explanation || '（无解析）';
-      explanationEl.style.display = 'block';
+      explanationDiv.style.display = 'block';
     }
 
-    // Show feedback
-    const feedbackEl = document.getElementById('quizFeedback');
-    if (feedbackEl) {
-      feedbackEl.textContent = result.isCorrect ? '回答正确！' : '回答错误';
-      feedbackEl.className = `quiz-feedback ${result.isCorrect ? 'correct' : 'incorrect'}`;
-      feedbackEl.style.display = 'block';
-    }
+    // Show next button
+    const nextBtn = document.getElementById('quizNextBtn');
+    if (nextBtn) {
+      nextBtn.style.display = 'inline-flex';
+      nextBtn.disabled = false;
+      nextBtn.onclick = () => {
+        // Hide result area
+        if (resultArea) resultArea.style.display = 'none';
+        if (resultCorrect) resultCorrect.style.display = 'none';
+        if (resultIncorrect) resultIncorrect.style.display = 'none';
+        if (explanationDiv) explanationDiv.style.display = 'none';
+        if (nextBtn) { nextBtn.style.display = 'none'; nextBtn.disabled = true; }
 
-    // Wait ~2s, then advance
-    await new Promise(r => setTimeout(r, 2000));
+        this._answerSubmitted = false;
+        document.querySelectorAll('.quiz-option').forEach(b => {
+          b.classList.remove('correct', 'incorrect');
+          b.disabled = false;
+        });
 
-    this._answerSubmitted = false;
-    document.querySelectorAll('.quiz-option').forEach(b => {
-      b.classList.remove('correct', 'incorrect');
-      b.disabled = false;
-    });
-    const feedbackEl2 = document.getElementById('quizFeedback');
-    const explanationEl2 = document.getElementById('quizExplanation');
-    if (feedbackEl2) feedbackEl2.style.display = 'none';
-    if (explanationEl2) explanationEl2.style.display = 'none';
-
-    const next = this.getNextQuestion();
-    if (next) {
-      this._renderCurrentQuestion();
-    } else {
-      this._renderResults();
+        const next = this.getNextQuestion();
+        if (next) {
+          this._renderCurrentQuestion();
+        } else {
+          this._renderResults();
+        }
+      };
     }
   }
 
@@ -494,10 +597,11 @@ export class QuizCore {
       return;
     }
 
-    const questionEl = document.getElementById('quizQuestion');
-    const optionsContainer = document.getElementById('quizOptions');
-    const progressEl = document.getElementById('quizProgress');
-    const timerEl = document.getElementById('quizTimer');
+    const questionEl = document.getElementById('quizQuestionText');
+    const optionsContainer = document.getElementById('quizOptionsList');
+    const progressFill = document.getElementById('quizSessionProgress');
+    const counterEl = document.getElementById('quizSessionCounter');
+    const modeEl = document.getElementById('quizSessionMode');
 
     if (questionEl) {
       questionEl.textContent = `Q${this.currentIndex + 1}. ${q.question}`;
@@ -507,39 +611,23 @@ export class QuizCore {
       const labels = ['A', 'B', 'C', 'D'];
       optionsContainer.innerHTML = q.options.map((opt, i) => `
         <button class="quiz-option" data-option="${i}">
-          <span class="quiz-option-label">${labels[i]}</span>
-          <span class="quiz-option-text">${this._escapeHtml(opt)}</span>
+          <span class="quiz-option-marker">${labels[i]}</span>
+          <span>${this._escapeHtml(opt)}</span>
         </button>
       `).join('');
-
-      // Re-bind click events
-      optionsContainer.querySelectorAll('.quiz-option').forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (btn.disabled) return;
-          const idx = parseInt(btn.dataset.option, 10);
-          this._handleAnswer(idx);
-        });
-      });
     }
 
-    if (progressEl) {
-      const total = this._getTotalQuestions();
-      const prog = this.currentMode === 'sequential' || this.currentMode === 'error-book'
-        ? { current: this.currentIndex + 1, total, percent: ((this.currentIndex + 1) / total * 100).toFixed(0) }
-        : this.modes['weighted-random']
-          ? this.modes['weighted-random'].getProgress(this.answers.length, total)
-          : { current: 1, total, percent: 0 };
-
-      progressEl.innerHTML = `
-        <div class="progress-bar">
-          <div class="progress-fill" style="width:${prog.percent}%"></div>
-        </div>
-        <span class="progress-text">${prog.current} / ${prog.total}</span>
-      `;
+    const total = this._getTotalQuestions();
+    if (progressFill) {
+      const percent = ((this.currentIndex + 1) / total * 100).toFixed(0);
+      progressFill.style.width = percent + '%';
     }
-
-    if (timerEl) {
-      this._updateTimerDisplay(timerEl);
+    if (counterEl) {
+      counterEl.textContent = `第 ${this.currentIndex + 1}/${total} 题`;
+    }
+    if (modeEl) {
+      const modeNames = { 'sequential': '顺序刷题', 'weighted-random': '加权乱序', 'error-book': '错题本' };
+      modeEl.textContent = modeNames[this.currentMode] || this.currentMode;
     }
   }
 
@@ -554,55 +642,37 @@ export class QuizCore {
     }
 
     const results = this.getResults();
-    const container = document.getElementById('quizResultsContainer');
-    if (!container) return;
 
-    container.style.display = 'block';
-
-    const summaryEl = document.getElementById('quizResultsSummary');
-    if (summaryEl) {
-      summaryEl.innerHTML = `
-        <div class="result-card ${results.accuracy >= 80 ? 'great' : results.accuracy >= 60 ? 'good' : 'needs-work'}">
-          <div class="result-accuracy">${results.accuracy}%</div>
-          <div class="result-stats">
-            <span>正确: ${results.correctCount}</span>
-            <span>错误: ${results.wrongCount}</span>
-            <span>总题数: ${results.totalQuestions}</span>
-            <span>总用时: ${this._formatTime(results.totalTime)}</span>
-            <span>平均: ${results.avgTime}s/题</span>
-          </div>
-        </div>
-      `;
-    }
-
-    const detailEl = document.getElementById('quizResultsDetail');
-    if (detailEl) {
-      detailEl.innerHTML = results.questionResults.map((r, i) => `
-        <div class="result-item ${r.isCorrect ? 'correct' : 'incorrect'}">
-          <div class="result-item-header">
-            <span class="result-item-num">Q${i + 1}</span>
-            <span class="result-item-status">${r.isCorrect ? '正确' : '错误'}</span>
-          </div>
-          <div class="result-item-question">${this._escapeHtml(r.question)}</div>
-          <div class="result-item-answer">你的答案: ${String.fromCharCode(65 + r.selectedOption)} | 正确答案: ${String.fromCharCode(65 + r.correctOption)}</div>
-          ${r.explanation ? `<div class="result-item-explanation">${this._escapeHtml(r.explanation)}</div>` : ''}
-        </div>
-      `).join('');
-    }
-
-    // Hide question area
+    // Hide question area and result area
     const questionArea = document.getElementById('quizQuestionArea');
+    const resultArea = document.getElementById('quizResultArea');
+    const nextBtn = document.getElementById('quizNextBtn');
     if (questionArea) questionArea.style.display = 'none';
+    if (resultArea) resultArea.style.display = 'none';
+    if (nextBtn) nextBtn.style.display = 'none';
 
-    // Show back/retry button
-    const backBtn = document.getElementById('quizBackBtn');
-    if (backBtn) backBtn.style.display = 'inline-block';
-    backBtn.addEventListener('click', () => {
+    // Show stats
+    const statsDiv = document.getElementById('quizSessionStats');
+    const statCorrect = document.getElementById('quizStatCorrect');
+    const statIncorrect = document.getElementById('quizStatIncorrect');
+    const statAccuracy = document.getElementById('quizStatAccuracy');
+
+    if (statsDiv) statsDiv.style.display = 'block';
+    if (statCorrect) statCorrect.textContent = results.correctCount;
+    if (statIncorrect) statIncorrect.textContent = results.wrongCount;
+    if (statAccuracy) statAccuracy.textContent = results.accuracy + '%';
+
+    // Show end message
+    const endMsg = document.getElementById('quizSessionEndMsg');
+    if (endMsg) endMsg.style.display = 'block';
+
+    // Auto-redirect after 5 seconds
+    setTimeout(() => {
       this._endQuiz();
-      if (window.__paperlens && window.__paperlens.router) {
-        window.__paperlens.router.navigate('quiz');
+      if (window.__lt && window.__lt.router) {
+        window.__lt.router.navigate('quiz');
       }
-    }, { once: true });
+    }, 5000);
   }
 
   // ---------------------------------------------------------------------------

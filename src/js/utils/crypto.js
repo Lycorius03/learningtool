@@ -64,5 +64,10 @@ export async function decryptApiKey(packedBase64, password) {
 export function getDevicePassword() {
   // Use a combination of user agent + screen info as a simple device fingerprint
   const fp = `${navigator.userAgent}|${screen.width}x${screen.height}|${navigator.language}`;
-  return btoa(fp).slice(0, 32);
+  try {
+    return btoa(fp).slice(0, 32);
+  } catch (e) {
+    // btoa can throw if fp contains non-Latin1 characters (rare edge case)
+    return btoa(encodeURIComponent(fp)).slice(0, 32);
+  }
 }
