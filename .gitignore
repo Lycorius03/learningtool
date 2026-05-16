@@ -1,8 +1,22 @@
-node_modules/
-.env
-data/
+# 运行时临时文件
+server.pid
 *.log
+
+# 依赖和构建产物
+node_modules/
+dist/
+build/
+
+# 环境变量
+.env
+.env.local
+
+# 上传文件
+data/
 *.tar.gz
+*.docx
+
+# OS 文件
 .DS_Store
 Thumbs.db
 
