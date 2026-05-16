@@ -66,7 +66,7 @@ export class Router {
     }
 
     try {
-      const resp = await fetch(`/src/views/${route}.html`);
+      const resp = await fetch(`src/views/${route}.html`);
       if (!resp.ok) { container.innerHTML = this._notFound(route); return; }
       const html = await resp.text();
       container.innerHTML = html;
