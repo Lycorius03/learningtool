@@ -543,6 +543,10 @@ learningtool/
 ├── README.md                     # This file
 ├── LICENSE                       # MIT license
 ├── src/                          # Frontend source code
+│   ├── lib/                     # Vendor libraries (local, zero CDN)
+│   │   ├── gsap.min.js           #   GSAP animation engine
+│   │   ├── ScrollTrigger.min.js  #   GSAP ScrollTrigger plugin
+│   │   └── three.min.js          #   Three.js 3D rendering
 │   ├── css/                      # Stylesheets
 │   │   ├── design-tokens.css     #   Color palette, typography, spacing
 │   │   ├── animations.css        #   Keyframe animations
@@ -561,10 +565,12 @@ learningtool/
 │   │   │   ├── ai-engine.js      #     AI API client
 │   │   │   ├── api-keys.js       #     Encrypted key storage
 │   │   │   ├── file-parser.js    #     File reading and parsing
+│   │   │   ├── smooth-scroll.js  #     Smooth scrolling (Lenis wrapper)
 │   │   │   └── storage.js        #     localStorage wrapper
 │   │   └── utils/                #   Utility functions
 │   │       ├── alias-method.js   #     O(1) weighted random sampling
 │   │       ├── crypto.js         #     AES-GCM encryption
+│   │       ├── magnetic.js       #     Magnetic hover effects
 │   │       ├── mfaw.js           #     MFAW algorithm
 │   │       └── toast.js          #     Toast notifications
 │   └── views/                    # HTML view templates
@@ -598,8 +604,9 @@ learningtool/
 │   └── wsl2-test.sh              #   WSL2 compatibility test
 └── data/                         # Runtime data (gitignored, created automatically)
     ├── uploads/                  #   Uploaded files
-    ├── ai-logs/                  #   AI output logs
-    └── logs/                     #   Server logs
+    ├── ai-logs/                  #   AI output logs with verification
+    ├── logs/                     #   Server logs
+    └── server.pid                #   Server process ID file
 ```
 
 ---
